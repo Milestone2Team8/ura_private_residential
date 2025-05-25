@@ -1,0 +1,3 @@
+To run fetch_ura_data.py, first create an URA account at https://eservice.ura.gov.sg/maps/api/#introduction to obtain an access key. Then, save this key in a .env file as URA_ACCESS_KEY="your access key".
+
+To be updated.
