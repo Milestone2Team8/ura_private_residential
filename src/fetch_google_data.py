@@ -178,7 +178,7 @@ def fetch_google_data(g_api_key, poi_type, radius=500, place="Singapore", test_r
 
     df.to_csv(Path(f"./src/data/input/raw_google_data_{poi_type}.csv"), index=False)
 
-    plot_google_poi(gdf_urban, grid_points, df, 
+    plot_google_poi(gdf_urban, grid_points, df,
                     Path(f"./src/data/plot/raw_google_data_{poi_type}.html"), radius)
 
     return df, error_points
