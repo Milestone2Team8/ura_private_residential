@@ -98,7 +98,22 @@ def g_nearby_search(g_api_key, lat, lng, radius, poi_type):
     return all_results
 
 
-def plot_google_poi(gdf_urban, grid_points, poi_df, output_html_path):
+def plot_google_poi(gdf_urban, grid_points, poi_df, output_html_path, radius):
+    """
+    Plots urban area boundaries, grid search points, and POI locations on a folium map 
+    and saves it as an interactive HTML file.
+
+    Args:
+        gdf_urban (geopandas.GeoDataFrame): GeoDataFrame containing the geometry of the urban area.
+        grid_points (list of tuple): List of (lat, lng) tuples representing grid search points.
+        poi_df (pandas.DataFrame): DataFrame of POIs with 'lat', 'lng', and 'name' columns.
+        output_html_path (str or Path): Path to save the resulting HTML map file.
+        radius (int): Radius in meters for drawing grid circles.
+
+    Returns:
+        None. Saves an HTML file containing the folium map.
+    """
+
     m = folium.Map(location=[1.3521, 103.8198], zoom_start=11)
     folium.GeoJson(gdf_urban, name="Urban Area").add_to(m)
 
@@ -133,9 +148,6 @@ def fetch_google_data(g_api_key, poi_type, radius=500, place="Singapore", test_r
             - pd.DataFrame: Cleaned POI results
             - list: Error coordinates
     """
-    output_json_path = Path()
-    output_csv_path = Path(f"./src/data/input/raw_google_data_{poi_type}.csv")
-    output_html_path = Path(f"./src/data/plot/raw_google_data_{poi_type}.html")
 
     gdf_urban = get_urban_polygons(place=place)
     grid_points = create_grid(urban_geom= gdf_urban.geometry.values[0])
@@ -160,12 +172,14 @@ def fetch_google_data(g_api_key, poi_type, radius=500, place="Singapore", test_r
     df['lat'] = df['geometry'].apply(lambda x: x['location']['lat'])
     df['lng'] = df['geometry'].apply(lambda x: x['location']['lng'])
 
-    with open(output_json_path, "w", encoding="utf-8") as f:
+    with open(Path(f"./src/data/plot/raw_google_data_{poi_type}.json"),
+               "w", encoding="utf-8") as f:
         json.dump(all_results, f, indent=4)
 
-    df.to_csv(output_csv_path, index=False)
+    df.to_csv(Path(f"./src/data/input/raw_google_data_{poi_type}.csv"), index=False)
 
-    plot_google_poi(gdf_urban, grid_points, df, output_html_path)
+    plot_google_poi(gdf_urban, grid_points, df, 
+                    Path(f"./src/data/plot/raw_google_data_{poi_type}.html"), radius)
 
     return df, error_points
 
@@ -187,10 +201,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    g_api_key = os.getenv("GOOGLE_API_KEY")
+    api_key = os.getenv("GOOGLE_API_KEY")
 
     fetch_google_data(
-        g_api_key=g_api_key,
+        g_api_key=api_key,
         poi_type=args.poi_type,
         radius=args.radius,
         place=args.place,

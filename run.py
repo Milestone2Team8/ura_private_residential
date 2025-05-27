@@ -8,7 +8,6 @@ for downstream unsupervised and supervised learning tasks.
 from src.clean_ura_data import clean_ura_data
 from src.clean_google_data import clean_google_data
 
-
 def run_all(poi_type_list):
     """
     Cleans raw URA private residential data and Google POI data 
@@ -30,7 +29,7 @@ def run_all(poi_type_list):
 
 if __name__ == "__main__":
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="Run data cleaning pipeline")
     parser.add_argument(
         "--poi_type_list",
