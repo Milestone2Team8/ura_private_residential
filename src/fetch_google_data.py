@@ -15,7 +15,6 @@ import pandas as pd
 import folium
 import osmnx as ox
 from shapely.geometry import Point
-import geopandas as gpd
 
 def get_urban_polygons(place="Singapore"):
     """
@@ -40,14 +39,19 @@ def get_urban_polygons(place="Singapore"):
 
     return urban_area
 
-def create_grid(urban_geom, min_lat=1.22, max_lat=1.47,
-                min_lng=103.6, max_lng=104.1, step=0.005):
+def create_grid(urban_geom, step=0.005):
     """
     Creates a grid of lat/lng points within bounding box that fall inside urban_geom.
 
     Returns:
         list: List of (lat, lng) tuples
     """
+
+    min_lat=1.22
+    max_lat=1.47
+    min_lng=103.6
+    max_lng=104.1
+
     lat_range = np.arange(min_lat, max_lat, step)
     lng_range = np.arange(min_lng, max_lng, step)
 
@@ -93,6 +97,33 @@ def g_nearby_search(g_api_key, lat, lng, radius, poi_type):
 
     return all_results
 
+
+def plot_google_poi(gdf_urban, grid_points, poi_df, output_html_path):
+    m = folium.Map(location=[1.3521, 103.8198], zoom_start=11)
+    folium.GeoJson(gdf_urban, name="Urban Area").add_to(m)
+
+    for lat, lng in grid_points:
+        folium.Circle(
+            location=[lat, lng],
+            radius=radius,
+            color='red',
+            fill=True,
+            fill_opacity=0.3
+        ).add_to(m)
+
+    for _, row in poi_df.iterrows():
+        folium.CircleMarker(
+            location=[row['lat'], row['lng']],
+            radius=3,
+            color='blue',
+            fill=True,
+            fill_opacity=0.7,
+            popup=row['name']
+        ).add_to(m)
+
+    m.save(output_html_path)
+
+
 def fetch_google_data(g_api_key, poi_type, radius=500, place="Singapore", test_run=False):
     """
     Fetches POIs of a given type from Google Places API inside urban areas of a given place.
@@ -102,13 +133,12 @@ def fetch_google_data(g_api_key, poi_type, radius=500, place="Singapore", test_r
             - pd.DataFrame: Cleaned POI results
             - list: Error coordinates
     """
-    output_json_path = Path(f"./src/data/input/raw_google_data_{poi_type}.json")
+    output_json_path = Path()
     output_csv_path = Path(f"./src/data/input/raw_google_data_{poi_type}.csv")
     output_html_path = Path(f"./src/data/plot/raw_google_data_{poi_type}.html")
 
     gdf_urban = get_urban_polygons(place=place)
-    urban_geom = gdf_urban.geometry.values[0]
-    grid_points = create_grid(urban_geom=urban_geom)
+    grid_points = create_grid(urban_geom= gdf_urban.geometry.values[0])
 
     all_results = []
     error_points = []
@@ -123,13 +153,10 @@ def fetch_google_data(g_api_key, poi_type, radius=500, place="Singapore", test_r
         except requests.RequestException:
             error_points.append((lat, lng))
 
-    column_list = [
-        'place_id', 'name', 'business_status', 'geometry',
-        'price_level', 'user_ratings_total', 'rating',
-        'types', 'vicinity', 'permanently_closed'
-    ]
-
-    df = pd.DataFrame(all_results)[column_list]
+    df = pd.DataFrame(all_results)[['place_id', 'name', 'business_status', 'geometry',
+                                    'price_level', 'user_ratings_total', 'rating',
+                                    'types', 'vicinity', 'permanently_closed'
+                                    ]]
     df['lat'] = df['geometry'].apply(lambda x: x['location']['lat'])
     df['lng'] = df['geometry'].apply(lambda x: x['location']['lng'])
 
@@ -138,29 +165,7 @@ def fetch_google_data(g_api_key, poi_type, radius=500, place="Singapore", test_r
 
     df.to_csv(output_csv_path, index=False)
 
-    m = folium.Map(location=[1.3521, 103.8198], zoom_start=11)
-    folium.GeoJson(gdf_urban, name="Urban Area").add_to(m)
-
-    for lat, lng in grid_points:
-        folium.Circle(
-            location=[lat, lng],
-            radius=radius,
-            color='red',
-            fill=True,
-            fill_opacity=0.3
-        ).add_to(m)
-
-    for _, row in df.iterrows():
-        folium.CircleMarker(
-            location=[row['lat'], row['lng']],
-            radius=3,
-            color='blue',
-            fill=True,
-            fill_opacity=0.7,
-            popup=row['name']
-        ).add_to(m)
-
-    m.save(output_html_path)
+    plot_google_poi(gdf_urban, grid_points, df, output_html_path)
 
     return df, error_points
 
