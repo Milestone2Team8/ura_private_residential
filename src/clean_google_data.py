@@ -1,28 +1,24 @@
+"""
+Cleans and combines raw POI data from multiple CSV files into a GeoDataFrame.
+"""
+
+from pathlib import Path
+from shapely.geometry import Point
 import pandas as pd
 import geopandas as gpd
-from shapely.geometry import Point
-from pathlib import Path
 
 def clean_google_data(poi_type_list):
     """
     Loads and combines raw POI data from multiple CSV files based on a list of POI types.
-    Removes duplicate entries based on `place_id`, converts the cleaned DataFrame into a 
+    Removes duplicate entries based on `place_id`, converts the cleaned DataFrame into a
     GeoDataFrame, and saves it as a single pickle file.
 
     Args:
-        poi_type_list (list of str): List of POI types (e.g., ['restaurant', 'school']) used to 
-                                     construct input file names.
+        poi_type_list (list of str): List of POI types (e.g., ['restaurant', 'school'])
 
     Returns:
-        geopandas.GeoDataFrame: A GeoDataFrame containing the cleaned and stacked POI data with geometry.
-
-    Input:
-        - CSV paths: src/data/input/raw_google_data_<poi_type>.csv for each type in the list
-
-    Output:
-        - Pickle path: src/data/output/clean_google_data_combined.pkl
+        geopandas.GeoDataFrame: Cleaned and stacked POI data with geometry.
     """
-
     combined_df = []
 
     for poi_type in poi_type_list:
