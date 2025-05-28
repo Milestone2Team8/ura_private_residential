@@ -1,1 +1,3 @@
 To run fetch_ura_data.py, first create an URA account at https://eservice.ura.gov.sg/maps/api/#introduction to obtain an access key. Then, save this key in a .env file as URA_ACCESS_KEY="your access key".
+
+To run fetch_google_data.py, first create a Google Cloud account and enable the Places API at https://console.cloud.google.com/apis/library/places-backend.googleapis.com. Then, generate an API key and save it in a .env file as GOOGLE_API_KEY="your_google_places_api_key"

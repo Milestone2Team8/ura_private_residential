@@ -6,19 +6,41 @@ for downstream unsupervised and supervised learning tasks.
 """
 
 from src.clean_ura_data import clean_ura_data
+from src.clean_google_data import clean_google_data
 from src.clean_prepare_population_data import clean_population_data, prepare_population_data
 
 
 def run_all():
-    """Cleans raw ura private residential data and prepares it for modeling tasks."""
+    """
+    Cleans raw URA private residential data and Google POI data 
+    and prepares them for modeling tasks.
+
+    Args:
+        poi_type_list (list of str): List of POI types to clean and combine.
+
+    Returns:
+        tuple: Cleaned URA dataframe and combined Google POI GeoDataFrame.
+    """
     df_clean = clean_ura_data()
+    df_google_clean = clean_google_data(poi_type_list)
     df_cleaned_population = clean_population_data()
     df_monthly_population_growth_rates = prepare_population_data(df_cleaned_population)
 
-    # TO-DO: Left join secondary data to df_condo_clean
+    # TO-DO: Left join secondary data to df_ura_clean
 
-    return df_clean
+    return df_ura_clean, df_google_clean
 
 
 if __name__ == "__main__":
-    run_all()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Run data cleaning pipeline")
+    parser.add_argument(
+        "--poi_type_list",
+        nargs="+",
+        required=True,
+        help="List of POI types to include (e.g., restaurant school pharmacy)"
+    )
+    args = parser.parse_args()
+
+    run_all(poi_type_list=args.poi_type_list)

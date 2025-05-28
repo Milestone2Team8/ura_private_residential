@@ -9,3 +9,7 @@ venv/
 
 # Others
 __pycache__/
+nick_dev.ipynb
+
+# Docker devcontainer
+.devcontainer
