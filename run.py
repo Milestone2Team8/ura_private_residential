@@ -7,8 +7,10 @@ for downstream unsupervised and supervised learning tasks.
 
 from src.clean_ura_data import clean_ura_data
 from src.clean_google_data import clean_google_data
+from src.clean_prepare_population_data import clean_population_data, prepare_population_data
 
-def run_all(poi_type_list):
+
+def run_all():
     """
     Cleans raw URA private residential data and Google POI data 
     and prepares them for modeling tasks.
@@ -19,8 +21,10 @@ def run_all(poi_type_list):
     Returns:
         tuple: Cleaned URA dataframe and combined Google POI GeoDataFrame.
     """
-    df_ura_clean = clean_ura_data()
+    df_clean = clean_ura_data()
     df_google_clean = clean_google_data(poi_type_list)
+    df_population_clean = clean_population_data()
+    df_monthly_population_growth_rates = prepare_population_data(df_population_clean)
 
     # TO-DO: Left join secondary data to df_ura_clean
 

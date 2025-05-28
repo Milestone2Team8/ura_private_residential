@@ -1,0 +1,54 @@
+from secondary_ds_helper_fuctions import clean_singstat_ds, parse_quarter, clean_and_prepare_dataset, 
+    predict_missing_year, distribute_yearly_to_monthly_rate, distribute_quarterly_to_monthly_rate
+from pathlib import Path
+from datetime import datetime
+import pandas as pd
+
+
+INPUT_POPULATION_PATH = Path("./src/data/M810001.xlsx")
+
+def clean_population_data(input_csv_path=INPUT_POPULATION_PATH):
+    """
+    Apply data cleaning to population growth Singstat dataframes
+
+    :param input_csv_path: Path to the input population xlsx file
+    :type input_csv_path: str or Path
+    :return: Cleaned DataFrame ready for analysis
+    :rtype: pd.DataFrame
+    """
+
+    df_population = pd.read_excel(INPUT_POPULATION_PATH, skiprows=8)
+    df_population_clean = clean_singstat_ds(df_pdf_population)
+    
+    return df_pop_clean
+
+
+def prepare_population_data(df_pop : pd.DataFrame):
+
+    """
+    Cleans yearly population growth dataframe, and convert
+    yearly rate to monthly.
+    
+    :param df_pop: Dataframe to be prepared for analysis
+    :type df_pop: pd.DataFrame
+    :return: Manipulated dataframe ready for analysis
+    :rtype: pd.DataFrame
+    """
+
+    df_monthly_population_growth_rates = clean_and_prepare_dataset(
+        df_pop, "Total Population (Number)", "population"
+    )
+    df_monthly_population_growth_rates["population"] = pd.to_numeric(
+        df_monthly_population_growth_rates["population"], errors="coerce"
+    )
+    df_monthly_population_growth_rates["population_growth_rate"] = (
+        df_monthly_population_growth_rates["population"].pct_change()
+    )
+    df_monthly_population_growth_rates.dropna(inplace=True)
+    df_monthly_population_growth_rates = predict_missing_year(
+        df_monthly_population_growth_rates, "population_growth_rate", 2024
+    )
+    df_monthly_population_growth_rates = distribute_yearly_to_monthly_rate(
+        df_monthly_population_growth_rates, "population_growth_rate", 2019, 2023
+    )
+    
