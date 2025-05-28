@@ -23,8 +23,8 @@ def run_all():
     """
     df_clean = clean_ura_data()
     df_google_clean = clean_google_data(poi_type_list)
-    df_cleaned_population = clean_population_data()
-    df_monthly_population_growth_rates = prepare_population_data(df_cleaned_population)
+    df_population_clean = clean_population_data()
+    df_monthly_population_growth_rates = prepare_population_data(df_population_clean)
 
     # TO-DO: Left join secondary data to df_ura_clean
 
