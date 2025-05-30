@@ -235,8 +235,6 @@ def clean_ura_data(
         "nettPrice",  # >99% missing
         "tenure_start",  # used to compute age
         "age",  # used to compute age_bin
-        "project",  # high cardinality; unseen in future data
-        "street",  # high cardinality; aggregated by "district"
         "x",  # replaced by "longitude"
         "y",  # replaced by "latitude"
     ]
