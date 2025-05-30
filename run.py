@@ -6,13 +6,19 @@ for downstream unsupervised and supervised learning tasks.
 """
 
 from src.clean_ura_data import clean_ura_data
+from src.find_nearest_train_stn import find_nearest_train_stn
 from src.clean_google_data import clean_google_data
-from src.clean_prepare_population_data import clean_population_data, prepare_population_data
+from src.clean_prepare_population_data import (
+    clean_population_data,
+    prepare_population_data,
+)
+
+# pylint: disable=unused-variable
 
 
-def run_all():
+def run_all(poi_type_list):
     """
-    Cleans raw URA private residential data and Google POI data 
+    Cleans raw URA private residential data and Google POI data
     and prepares them for modeling tasks.
 
     Args:
@@ -22,13 +28,14 @@ def run_all():
         tuple: Cleaned URA dataframe and combined Google POI GeoDataFrame.
     """
     df_clean = clean_ura_data()
+    df_nearest_mrt, df_nearest_lrt = find_nearest_train_stn()
     df_google_clean = clean_google_data(poi_type_list)
     df_population_clean = clean_population_data()
-    df_monthly_population_growth_rates = prepare_population_data(df_population_clean)
+    df_monthly_population_growth_rates = prepare_population_data(
+        df_population_clean
+    )
 
     # TO-DO: Left join secondary data to df_ura_clean
-
-    return df_ura_clean, df_google_clean
 
 
 if __name__ == "__main__":
@@ -39,7 +46,7 @@ if __name__ == "__main__":
         "--poi_type_list",
         nargs="+",
         required=True,
-        help="List of POI types to include (e.g., restaurant school pharmacy)"
+        help="List of POI types to include (e.g., restaurant school pharmacy)",
     )
     args = parser.parse_args()
 
