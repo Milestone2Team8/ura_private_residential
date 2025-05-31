@@ -1,3 +1,7 @@
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+import numpy as np
+
 """
 The helper or utility functions below are applied to specific economic indicator datasets, 
 such as the HDB resale index, CPI, population growth, and marriage rates, to prepare them 
