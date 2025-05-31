@@ -1,7 +1,7 @@
 """
 Module to clean and process population dataset.
 
-Includes functions to:
+Process includes functions to:
 - Select population data only
 - Compute monthly population growth rates by percentage
 - Predict missing years data

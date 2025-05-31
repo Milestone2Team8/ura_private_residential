@@ -16,6 +16,10 @@ from src.clean_prepare_marriage_data import (
     clean_marriage_data,
     prepare_marriage_data
 )
+from src.clean_prepare_cpi_data import (
+    clean_cpi_data,
+    prepare_cpi_data
+)
 
 # pylint: disable=unused-variable
 
@@ -38,6 +42,8 @@ def run_all(poi_type_list):
     df_monthly_population_growth_rates = prepare_population_data(df_population_clean)
     df_marriage_clean = clean_marriage_data()
     df_monthly_marriage_growth_rates = prepare_marriage_data(df_marriage_clean)
+    df_cpi_clean = clean_cpi_data()
+    df_monthly_cpi = prepare_cpi_data(df_cpi_clean)
 
     # TO-DO: Left join secondary data to df_ura_clean
 
