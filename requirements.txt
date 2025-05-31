@@ -5,6 +5,7 @@ requests==2.32.3
 scikit-learn==1.6.1
 xlrd==2.0.1
 
+
 # Geospatial Libraries
 shapely==2.0.6
 geopandas==1.0.1

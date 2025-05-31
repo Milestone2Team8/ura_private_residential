@@ -31,9 +31,7 @@ def run_all(poi_type_list):
     df_nearest_mrt, df_nearest_lrt = find_nearest_train_stn()
     df_google_clean = clean_google_data(poi_type_list)
     df_population_clean = clean_population_data()
-    df_monthly_population_growth_rates = prepare_population_data(
-        df_population_clean
-    )
+    df_monthly_population_growth_rates = prepare_population_data(df_population_clean)
 
     # TO-DO: Left join secondary data to df_ura_clean
 

@@ -1,12 +1,21 @@
-from src.secondary_ds_helper_functions import clean_singstat_ds, parse_quarter
-from src.secondary_ds_helper_functions import clean_and_prepare_dataset, predict_missing_year
-from src.secondary_ds_helper_functions import distribute_yearly_to_monthly_rate, distribute_quarterly_to_monthly_rate
+"""
+Module to clean and process population dataset.
+
+Includes functions to:
+- Select population data only
+- Compute monthly population growth rates by percentage
+- Predict missing years data
+- Do temporal data processing and transform into monthly rates
+"""
+
 from pathlib import Path
-from datetime import datetime
 import pandas as pd
+from src.secondary_ds_helper_functions import (clean_singstat_ds,
+                        clean_and_prepare_dataset, predict_missing_year,
+                        distribute_yearly_to_monthly_rate)
 
 
-INPUT_POPULATION_PATH = Path("./src/data/M810001.xlsx")
+INPUT_POPULATION_PATH = Path("./src/data/input/M810001.xlsx")
 
 def clean_population_data(input_csv_path=INPUT_POPULATION_PATH):
     """
@@ -18,10 +27,10 @@ def clean_population_data(input_csv_path=INPUT_POPULATION_PATH):
     :rtype: pd.DataFrame
     """
 
-    df_population = pd.read_excel(INPUT_POPULATION_PATH, skiprows=8)
-    df_population_clean = clean_singstat_ds(df_pdf_population)
-    
-    return df_pop_clean
+    df_population = pd.read_excel(input_csv_path, skiprows=8)
+    df_population_clean = clean_singstat_ds(df_population)
+
+    return df_population_clean
 
 
 def prepare_population_data(df_pop : pd.DataFrame):
@@ -39,17 +48,22 @@ def prepare_population_data(df_pop : pd.DataFrame):
     df_monthly_population_growth_rates = clean_and_prepare_dataset(
         df_pop, "Total Population (Number)", "population"
     )
+
     df_monthly_population_growth_rates["population"] = pd.to_numeric(
         df_monthly_population_growth_rates["population"], errors="coerce"
     )
+
     df_monthly_population_growth_rates["population_growth_rate"] = (
         df_monthly_population_growth_rates["population"].pct_change()
     )
+
     df_monthly_population_growth_rates.dropna(inplace=True)
     df_monthly_population_growth_rates = predict_missing_year(
-        df_monthly_population_growth_rates, "population_growth_rate", 2024
+        df_monthly_population_growth_rates, "population_growth_rate", 2025
     )
+
     df_monthly_population_growth_rates = distribute_yearly_to_monthly_rate(
-        df_monthly_population_growth_rates, "population_growth_rate", 2019, 2023
+        df_monthly_population_growth_rates, "population_growth_rate", 2020, 2024
     )
-    
+
+    return df_monthly_population_growth_rates
