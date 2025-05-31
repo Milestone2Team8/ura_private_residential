@@ -1,12 +1,13 @@
+"""
+Module provides helper or utility functions below are applied to specific economic indicator datasets, 
+such as the Private home index, CPI, population growth, and marriage rates, to prepare them 
+for further analysis.
+"""
+
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 import numpy as np
 
-"""
-The helper or utility functions below are applied to specific economic indicator datasets, 
-such as the HDB resale index, CPI, population growth, and marriage rates, to prepare them 
-for further analysis.
-"""
 
 def clean_singstat_ds(df_raw):
     """
@@ -40,7 +41,7 @@ def clean_singstat_ds(df_raw):
 
         return df_clean
     except Exception as e:
-        raise Exception(f"clean_singstat_ds has an exception{e}")
+        raise e(f"clean_singstat_ds has an exception: {e}")
 
 
 def parse_quarter(row):
@@ -60,7 +61,7 @@ def parse_quarter(row):
         month = (quarter - 1) * 3 + 1
         return pd.Timestamp(f"{year}-{month:02d}-01")
     except Exception as e:
-        raise Exception(f"parse_quarter has an exception{e}")
+        raise e(f"parse_quarter has an exception: {e}")
 
 
 def clean_and_prepare_dataset(
@@ -96,7 +97,7 @@ def clean_and_prepare_dataset(
         df_data_series = df_data_series.melt(
             id_vars=["Data Series"], var_name=cn_date, value_name=cn_melt
         )
-        if is_monthly == False:
+        if is_monthly is False:
             if is_quarterly:
                 df_data_series["quarter_index"] = df_data_series[cn_date].apply(
                     parse_quarter
@@ -118,9 +119,7 @@ def clean_and_prepare_dataset(
                 df_data_series.sort_index(inplace=True)
         return df_data_series
     except Exception as e:
-        raise Exception(
-            f"clean_and_prepare_dataset has an exception{e}"
-        )
+        raise e(f"clean_and_prepare_dataset has an exception: {e}")
 
 
 def predict_missing_year(df_data, column, year):
@@ -147,7 +146,7 @@ def predict_missing_year(df_data, column, year):
         predicted_row = pd.DataFrame({"year_index": [year], column: [predicted_value]})
         return pd.concat([df_data, predicted_row], ignore_index=True)
     except Exception as e:
-        raise Exception(f"predict_missing_year has an exception{e}")
+        raise e(f"predict_missing_year has an exception: {e}")
 
 
 def distribute_yearly_to_monthly_rate(
@@ -194,9 +193,7 @@ def distribute_yearly_to_monthly_rate(
         df_monthly_rates.index = df_monthly_rates.index.to_period("M")
         return df_monthly_rates
     except Exception as e:
-        raise Exception(
-            f"distribute_yearly_to_monthly_rate has an exception{e}"
-        )
+        raise e(f"distribute_yearly_to_monthly_rate has an exception: {e}")
 
 
 def distribute_quarterly_to_monthly_rate(
@@ -250,6 +247,4 @@ def distribute_quarterly_to_monthly_rate(
         df_monthly_rates.index = df_monthly_rates.index.to_period("M")
         return df_monthly_rates
     except Exception as e:
-        raise Exception(
-            f"distribute_quarterly_to_monthly_rate has an exception{e}"
-        )
+        raise e(f"distribute_quarterly_to_monthly_rate has an exception: {e}")

@@ -9,12 +9,10 @@ Includes functions to:
 """
 
 from pathlib import Path
-from datetime import datetime
 import pandas as pd
-from src.secondary_ds_helper_functions import (clean_singstat_ds, parse_quarter, 
+from src.secondary_ds_helper_functions import (clean_singstat_ds,
                         clean_and_prepare_dataset, predict_missing_year,
-                        distribute_yearly_to_monthly_rate, 
-                        distribute_quarterly_to_monthly_rate)
+                        distribute_yearly_to_monthly_rate)
 
 
 INPUT_POPULATION_PATH = Path("./src/data/input/M810001.xlsx")
@@ -29,9 +27,9 @@ def clean_population_data(input_csv_path=INPUT_POPULATION_PATH):
     :rtype: pd.DataFrame
     """
 
-    df_population = pd.read_excel(INPUT_POPULATION_PATH, skiprows=8)
+    df_population = pd.read_excel(input_csv_path, skiprows=8)
     df_population_clean = clean_singstat_ds(df_population)
-    
+
     return df_population_clean
 
 
