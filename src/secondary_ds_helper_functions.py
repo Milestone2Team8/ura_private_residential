@@ -194,3 +194,61 @@ def distribute_yearly_to_monthly_rate(
         return df_monthly_rates
     except Exception as e:
         raise e
+
+
+def prepare_housing_cpi(
+        df_cpi_clean: pd.DataFrame,
+        base_date: str = "2019-11-30",
+        start_date: str = "2019-12-01",
+        end_date: str = "2025-04-01",
+    ) -> pd.DataFrame:
+    """
+    This method cleans and prepares the Housing & Utilities CPI
+    dataset by converting the date column, calculating the adjusted
+    CPI, and computing the CPI growth rate.
+
+    :param df_cpi_clean: Cleaned CPI dataframe
+    :type df_cpi_clean: pd.DataFrame
+    :param base_date: The base date to calculate the adjusted CPI,
+                      defaults to '2019-11-30'
+    :type base_date: str, optional
+    :param start_date: The start date for the dataset, defaults to '2019-12-01'
+    :type start_date: str, optional
+    :param end_date: The end date for the dataset, defaults to '2025-04-01'
+    :type end_date: str, optional
+    :return: DataFrame with monthly CPI rates
+    :rtype: pd.DataFrame
+    :raises: Exception
+    """
+    try:
+        housing_cpi = clean_and_prepare_dataset(
+            df_cpi_clean, "  Housing & Utilities", "cpi_housing", "month",
+                options={"is_monthly": True}
+        )
+        housing_cpi["month"] = pd.to_datetime(
+            housing_cpi["month"].str.strip(), format="%Y %b", errors="coerce"
+        )
+        df_cpi = housing_cpi[
+            (housing_cpi["month"] >= start_date) &
+            (housing_cpi["month"] <= end_date)
+        ].reset_index(drop=True)
+        df_cpi["month"] = df_cpi["month"] - pd.offsets.MonthEnd(1)
+
+        base_cpi = (
+            df_cpi[df_cpi["month"] == base_date]["cpi_housing"].values[0]
+        )
+        df_cpi["cpi_adjusted"] = df_cpi["cpi_housing"] / base_cpi
+        df_cpi.drop(columns=["Data Series"], inplace=True)
+        df_cpi.set_index("month", inplace=True)
+        df_cpi.sort_index(inplace=True)
+
+        df_cpi = df_cpi.apply(pd.to_numeric)
+
+        df_cpi["cpi"] = df_cpi["cpi_adjusted"].pct_change()
+        df_cpi.drop(columns=["cpi_housing"], inplace=True)
+        df_cpi.drop(columns=["cpi_adjusted"], inplace=True)
+        df_cpi = df_cpi[df_cpi.index >= "2020-01-31"]
+        df_cpi.index = df_cpi.index.to_period("M")
+        return df_cpi
+    except Exception as e:
+        raise e

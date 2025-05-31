@@ -1,7 +1,7 @@
 """
 Module to clean and process marriage dataset.
 
-Includes functions to:
+Process includes functions to:
 - Predict missing year 2023/2024
 - Convert yearly rates to monthly rates.
 """
@@ -33,7 +33,7 @@ def clean_marriage_data(input_csv_path=INPUT_MARRIAGE_PATH):
 def prepare_marriage_data(df_clean : pd.DataFrame):
 
     """
-    Cleans yearly population growth dataframe, and convert
+    Cleans yearly marriage growth dataframe, and convert
     yearly rate to monthly.
     
     :param df_clean: Dataframe to be prepared for analysis
