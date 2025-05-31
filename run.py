@@ -12,9 +12,7 @@ from src.clean_prepare_population_data import (
     clean_population_data,
     prepare_population_data,
 )
-
 # pylint: disable=unused-variable
-
 
 def run_all(poi_type_list):
     """
