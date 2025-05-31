@@ -1,7 +1,7 @@
 """
-Module provides helper or utility functions below are applied to specific economic indicator datasets, 
-such as the Private home index, CPI, population growth, and marriage rates, to prepare them 
-for further analysis.
+Module provides helper or utility functions below are applied to specific 
+economic indicator datasets, such as the Private home index, CPI, population 
+growth, and marriage rates, to prepare them for further analysis.
 """
 
 import pandas as pd
@@ -41,8 +41,7 @@ def clean_singstat_ds(df_raw):
 
         return df_clean
     except Exception as e:
-        raise e(f"clean_singstat_ds has an exception: {e}")
-
+        raise e
 
 def parse_quarter(row):
     """
@@ -61,7 +60,7 @@ def parse_quarter(row):
         month = (quarter - 1) * 3 + 1
         return pd.Timestamp(f"{year}-{month:02d}-01")
     except Exception as e:
-        raise e(f"parse_quarter has an exception: {e}")
+        raise e
 
 
 def clean_and_prepare_dataset(
@@ -69,8 +68,7 @@ def clean_and_prepare_dataset(
     cn_data_series,
     cn_melt,
     cn_date="year",
-    is_monthly=False,
-    is_quarterly=False,
+    options=None
 ):
     """
     This method cleans and prepares the dataset for analysis by
@@ -84,14 +82,16 @@ def clean_and_prepare_dataset(
     :type cn_melt: str
     :param cn_date: The name of the date column. Defaulted to 'year'
     :type cn_date: str
-    :param is_quarterly: Flag indicating if the data is quarterly.
-                         Defaulted to False
-    :type is_quarterly: bool
+    :param options: is_quarterly, is_monthly. Defaulted to False
+    :type options: dict of booleans
     :return: Prepared DataFrame
     :rtype: pd.DataFrame
     :raises: Exception
     """
     try:
+        options = options or {}
+        is_monthly = options.get("is_monthly", False)
+        is_quarterly = options.get("is_quarterly", False)
         df_data.columns = df_data.columns.astype(str).str.strip()
         df_data_series = df_data[df_data["Data Series"] == cn_data_series].copy()
         df_data_series = df_data_series.melt(
@@ -119,7 +119,7 @@ def clean_and_prepare_dataset(
                 df_data_series.sort_index(inplace=True)
         return df_data_series
     except Exception as e:
-        raise e(f"clean_and_prepare_dataset has an exception: {e}")
+        raise e
 
 
 def predict_missing_year(df_data, column, year):
@@ -146,7 +146,7 @@ def predict_missing_year(df_data, column, year):
         predicted_row = pd.DataFrame({"year_index": [year], column: [predicted_value]})
         return pd.concat([df_data, predicted_row], ignore_index=True)
     except Exception as e:
-        raise e(f"predict_missing_year has an exception: {e}")
+        raise e
 
 
 def distribute_yearly_to_monthly_rate(
@@ -193,58 +193,4 @@ def distribute_yearly_to_monthly_rate(
         df_monthly_rates.index = df_monthly_rates.index.to_period("M")
         return df_monthly_rates
     except Exception as e:
-        raise e(f"distribute_yearly_to_monthly_rate has an exception: {e}")
-
-
-def distribute_quarterly_to_monthly_rate(
-    df_data, column, start_year, end_year
-):
-    """
-    This method distributes quarterly rates to monthly rates.
-
-    :param df_data: DataFrame containing the quarterly data
-    :type df_data: pd.DataFrame
-    :param column: The column containing the quarterly rates
-    :type column: str
-    :param start_date: The start date for distribution
-    :type start_date: str
-    :param end_date: The end date for distribution
-    :type end_date: str
-    :return: DataFrame with monthly rates
-    :rtype: pd.DataFrame
-    :raises: Exception
-    """
-    try:
-        monthly_rates = []
-        for i in range(len(df_data) - 1):
-            start_date = df_data.index[i]
-            end_date = df_data.index[i + 1]
-            quarterly_index = df_data.iloc[i + 1][column]
-            hdb_resale_index = df_data.iloc[i]["hdb_resale_index"]
-            if np.isnan(quarterly_index):
-                monthly_index = 0
-            else:
-                monthly_index = (1 + quarterly_index) ** (1 / 3) - 1
-            for j, month in enumerate(
-                pd.date_range(start=start_date, periods=3, freq="MS")
-            ):
-                monthly_rates.append(
-                    {
-                        "month": month + pd.offsets.MonthEnd(0),
-                        f"monthly_{column}": monthly_index,
-                        "monthly_hdb_resale_index": hdb_resale_index
-                        * ((1 + monthly_index) ** j),
-                        "quarterly_index": quarterly_index,
-                    }
-                )
-
-        df_monthly_rates = pd.DataFrame(monthly_rates)
-        df_monthly_rates = df_monthly_rates[
-            (df_monthly_rates["month"] >= f"{start_year}-01-01")
-            & (df_monthly_rates["month"] <= f"{end_year}-12-31")
-        ]
-        df_monthly_rates.set_index("month", inplace=True)
-        df_monthly_rates.index = df_monthly_rates.index.to_period("M")
-        return df_monthly_rates
-    except Exception as e:
-        raise e(f"distribute_quarterly_to_monthly_rate has an exception: {e}")
+        raise e
