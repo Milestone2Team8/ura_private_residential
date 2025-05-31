@@ -1,3 +1,13 @@
+"""
+Module to clean and process population dataset.
+
+Includes functions to:
+- Select population data only
+- Compute monthly population growth rates by percentage
+- Predict missing years data
+- Do temporal data processing and transform into monthly rates
+"""
+
 from pathlib import Path
 from datetime import datetime
 import pandas as pd
@@ -40,7 +50,6 @@ def prepare_population_data(df_pop : pd.DataFrame):
     df_monthly_population_growth_rates = clean_and_prepare_dataset(
         df_pop, "Total Population (Number)", "population"
     )
-    print(df_monthly_population_growth_rates)
 
     df_monthly_population_growth_rates["population"] = pd.to_numeric(
         df_monthly_population_growth_rates["population"], errors="coerce"
@@ -60,4 +69,3 @@ def prepare_population_data(df_pop : pd.DataFrame):
     )
 
     return df_monthly_population_growth_rates
-    
