@@ -44,7 +44,7 @@ def run_all(poi_type_list):
     df_monthly_marriage_growth_rates = prepare_marriage_data(df_marriage_clean)
     df_cpi_clean = clean_cpi_data()
     df_monthly_cpi = prepare_cpi_data(df_cpi_clean)
-    
+
     # TO-DO: Left join secondary data to df_ura_clean
 
 
