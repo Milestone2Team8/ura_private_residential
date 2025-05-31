@@ -33,20 +33,20 @@ def clean_population_data(input_csv_path=INPUT_POPULATION_PATH):
     return df_population_clean
 
 
-def prepare_population_data(df_pop : pd.DataFrame):
+def prepare_population_data(df_clean : pd.DataFrame):
 
     """
     Cleans yearly population growth dataframe, and convert
     yearly rate to monthly.
     
-    :param df_pop: Dataframe to be prepared for analysis
-    :type df_pop: pd.DataFrame
+    :param df_clean: Dataframe to be prepared for analysis
+    :type df_clean: pd.DataFrame
     :return: Manipulated dataframe ready for analysis
     :rtype: pd.DataFrame
     """
 
     df_monthly_population_growth_rates = clean_and_prepare_dataset(
-        df_pop, "Total Population (Number)", "population"
+        df_clean, "Total Population (Number)", "population"
     )
 
     df_monthly_population_growth_rates["population"] = pd.to_numeric(
