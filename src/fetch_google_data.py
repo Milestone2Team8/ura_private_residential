@@ -172,7 +172,7 @@ def plot_google_poi(gdf_urban, grid_points, poi_df, output_html_path, radius):
     m.save(output_html_path)
 
 
-def fetch_google_data(g_api_key, poi_type, radius=550, 
+def fetch_google_data(g_api_key, poi_type, radius=550,
                       test_run=False,
 #                      place="Singapore"
                       ):
@@ -231,8 +231,8 @@ if __name__ == "__main__":
                         help="Type of POI to fetch (e.g., restaurant, school)")
     parser.add_argument("--radius", type=int, default=550,
                         help="Search radius in meters (default: 550)")
-    parser.add_argument("--place", type=str, default="Singapore",
-                        help="Place to get POIs from (default: Singapore)")
+#    parser.add_argument("--place", type=str, default="Singapore",
+#                        help="Place to get POIs from (default: Singapore)")
     parser.add_argument("--test_run", action='store_true',
                         help="Toggle test run")
 
@@ -244,6 +244,6 @@ if __name__ == "__main__":
         g_api_key=api_key,
         poi_type=args.poi_type,
         radius=args.radius,
-        place=args.place,
-        test_run=args.test_run
+        test_run=args.test_run,
+#        place=args.place
     )
