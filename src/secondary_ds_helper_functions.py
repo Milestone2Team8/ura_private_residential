@@ -197,8 +197,7 @@ def distribute_yearly_to_monthly_rate(
 
 
 def prepare_housing_cpi(
-        df_cpi_clean: pd.DataFrame,
-        base_date: str = "2019-11-30",
+        df_cpi_housing: pd.DataFrame,
         start_date: str = "2019-12-01",
         end_date: str = "2025-04-01",
     ) -> pd.DataFrame:
@@ -207,11 +206,8 @@ def prepare_housing_cpi(
     dataset by converting the date column, calculating the adjusted
     CPI, and computing the CPI growth rate.
 
-    :param df_cpi_clean: Cleaned CPI dataframe
-    :type df_cpi_clean: pd.DataFrame
-    :param base_date: The base date to calculate the adjusted CPI,
-                      defaults to '2019-11-30'
-    :type base_date: str, optional
+    :param df_cpi_housing: Cleaned CPI dataframe
+    :type df_cpi_housing: pd.DataFrame
     :param start_date: The start date for the dataset, defaults to '2019-12-01'
     :type start_date: str, optional
     :param end_date: The end date for the dataset, defaults to '2025-04-01'
@@ -221,21 +217,20 @@ def prepare_housing_cpi(
     :raises: Exception
     """
     try:
-        housing_cpi = clean_and_prepare_dataset(
-            df_cpi_clean, "  Housing & Utilities", "cpi_housing", "month",
-                options={"is_monthly": True}
+        start_date_dt = pd.to_datetime(start_date)
+        base_date_dt = start_date_dt - pd.offsets.MonthEnd(1)
+
+        df_cpi_housing["month"] = pd.to_datetime(
+            df_cpi_housing["month"].str.strip(), format="%Y %b", errors="coerce"
         )
-        housing_cpi["month"] = pd.to_datetime(
-            housing_cpi["month"].str.strip(), format="%Y %b", errors="coerce"
-        )
-        df_cpi = housing_cpi[
-            (housing_cpi["month"] >= start_date) &
-            (housing_cpi["month"] <= end_date)
+        df_cpi = df_cpi_housing[
+            (df_cpi_housing["month"] >= start_date) &
+            (df_cpi_housing["month"] <= end_date)
         ].reset_index(drop=True)
         df_cpi["month"] = df_cpi["month"] - pd.offsets.MonthEnd(1)
 
         base_cpi = (
-            df_cpi[df_cpi["month"] == base_date]["cpi_housing"].values[0]
+            df_cpi[df_cpi["month"] == base_date_dt]["cpi_housing"].values[0]
         )
         df_cpi["cpi_adjusted"] = df_cpi["cpi_housing"] / base_cpi
         df_cpi.drop(columns=["Data Series"], inplace=True)
@@ -250,5 +245,38 @@ def prepare_housing_cpi(
         df_cpi = df_cpi[df_cpi.index >= "2020-01-31"]
         df_cpi.index = df_cpi.index.to_period("M")
         return df_cpi
+    except Exception as e:
+        raise e
+
+
+def clean_sora(df_sora):
+    """
+    This method cleans and prepares the SORA dataset by adjusting
+    the column headers, converting the date column, and resampling
+    the data to monthly end frequency.
+
+    :param df_sora: Raw SORA dataframe
+    :type df_sora: pd.DataFrame
+    :return: Cleaned and prepared SORA dataframe
+    :rtype: pd.DataFrame
+    :raises: Exception
+    """
+    try:
+        df_clean = df_sora.copy()
+        df_clean.columns = (
+            ['Value Date', 'Unnamed 1', 'Index', 'Publication Date', 'SORA']
+        )
+        df_clean = df_clean.drop(columns=['Unnamed 1', 'Index'])
+        df_clean = df_clean.drop(0).reset_index(drop=True)
+
+        df_clean['Publication Date'] = (
+            pd.to_datetime(
+                df_clean['Publication Date'],
+                format='%d-%b-%y',
+                errors='coerce')
+        )
+        df_clean['SORA'] = pd.to_numeric(df_clean['SORA'], errors='coerce')
+        df_clean.set_index('Publication Date', inplace=True)
+        return df_clean
     except Exception as e:
         raise e

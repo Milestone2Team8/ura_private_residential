@@ -14,17 +14,17 @@ from src.secondary_ds_helper_functions import (clean_singstat_ds,
 
 INPUT_MARRIAGE_PATH = Path("./src/data/input/M830102.xlsx")
 
-def clean_marriage_data(input_csv_path=INPUT_MARRIAGE_PATH):
+def clean_marriage_data(input_path=INPUT_MARRIAGE_PATH):
     """
     Apply data cleaning to marriage growth Singstat dataframes
 
-    :param input_csv_path: Path to the input population xlsx file
-    :type input_csv_path: str or Path
+    :param input_path: Path to the input population xlsx file
+    :type input_path: str or Path
     :return: Cleaned DataFrame ready for analysis
     :rtype: pd.DataFrame
     """
 
-    df_marriage = pd.read_excel(input_csv_path, skiprows=8)
+    df_marriage = pd.read_excel(input_path, skiprows=8)
     df_marriage_clean = clean_singstat_ds(df_marriage)
 
     return df_marriage_clean
@@ -38,7 +38,7 @@ def prepare_marriage_data(df_clean : pd.DataFrame):
     
     :param df_clean: Dataframe to be prepared for analysis
     :type df_clean: pd.DataFrame
-    :return: Manipulated dataframe ready for analysis
+    :return: Manipulated and resampled dataframe ready for analysis
     :rtype: pd.DataFrame
     """
 
