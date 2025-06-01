@@ -20,6 +20,10 @@ from src.clean_prepare_cpi_data import (
     clean_cpi_data,
     prepare_cpi_data
 )
+from src.clean_prepare_sora_data import (
+    clean_sora_data,
+    prepare_sora_data
+)
 
 # pylint: disable=unused-variable
 
@@ -44,6 +48,8 @@ def run_all(poi_type_list):
     df_monthly_marriage_growth_rates = prepare_marriage_data(df_marriage_clean)
     df_cpi_clean = clean_cpi_data()
     df_monthly_cpi = prepare_cpi_data(df_cpi_clean)
+    df_sora_clean = clean_sora_data()
+    df_monthly_sora = prepare_sora_data(df_sora_clean, "2019-12-31", "2025-04-01")
 
     # TO-DO: Left join secondary data to df_ura_clean
 
