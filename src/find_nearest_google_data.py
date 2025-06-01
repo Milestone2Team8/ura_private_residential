@@ -38,7 +38,7 @@ def count_nearest(gdf_property, gdf_google, poi_type, radius=500):
 
     gdf_property_proj['buffer_geom'] = gdf_property_proj.geometry.buffer(radius)
     gdf_property_proj = gdf_property_proj.set_geometry('buffer_geom')
-    joined = gpd.sjoin(gdf_property_proj, 
+    joined = gpd.sjoin(gdf_property_proj,
                        gdf_google_subset, how='left', predicate='contains')
 
     agg = joined.groupby(joined.index).agg(
@@ -84,7 +84,6 @@ def find_nearby_google_poi(
     results = []
 
     for poi_type in poi_type_list:
-        logger.info(f"Processing POI type: {poi_type}")
         result = count_nearest(gdf_property, gdf_google, poi_type, radius = radius)
         results.append(result)
 
