@@ -50,20 +50,17 @@ def get_ura_urban_polygons():
     for more efficient spatial processing.
 
     Returns:
-        geopandas.GeoDataFrame: A simplified GeoDataFrame containing the dissolved urban area geometry 
-        with EPSG:4326 as the coordinate reference system.
+        geopandas.GeoDataFrame: A simplified GeoDataFrame containing 
+        the dissolved urban area geometry with EPSG:4326 as the coordinate reference system.
     """
     dataset_id = "d_4765db0e87b9c86336792efe8a1f7a66"
     url = "https://api-open.data.gov.sg/v1/public/api/datasets/" + dataset_id + "/poll-download"
 
-    response = requests.get(url)
+    response = requests.get(url, timeout=10)
     json_data = response.json()
-    if json_data['code'] != 0:
-        print(json_data['errMsg'])
-        exit(1)
 
     url = json_data['data']['url']
-    response = requests.get(url)
+    response = requests.get(url, timeout=10)
     response = response.json()
 
     gdf = gpd.GeoDataFrame.from_features(response['features'])
@@ -175,7 +172,10 @@ def plot_google_poi(gdf_urban, grid_points, poi_df, output_html_path, radius):
     m.save(output_html_path)
 
 
-def fetch_google_data(g_api_key, poi_type, radius=550, place="Singapore", test_run=False):
+def fetch_google_data(g_api_key, poi_type, radius=550, 
+                      test_run=False,
+#                      place="Singapore"
+                      ):
     """
     Fetches POIs of a given type from Google Places API inside urban areas of a given place.
 
