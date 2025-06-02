@@ -222,34 +222,28 @@ def distribute_quarterly_to_monthly_rate(
     :raises: Exception
     """
     try:
-        df_data = df_data.sort_index()
         records = []
 
-        for row in df_data.itertuples():
-            quarter_end = row.Index.to_timestamp()
-            quarterly_rate_pct = getattr(row, column)
-            end_value = getattr(row, value_column)
+        def distribute_row(row):
+            end = row.Index.to_timestamp()
+            rate_pct = getattr(row, column)
+            end_val = getattr(row, value_column)
 
-            if pd.isna(quarterly_rate_pct) or pd.isna(end_value):
-                continue
+            if pd.isna(rate_pct) or pd.isna(end_val):
+                return []
 
-            quarterly_rate = quarterly_rate_pct / 100
-            monthly_rate = (1 + quarterly_rate) ** (1 / 3) - 1
+            r = (1 + rate_pct / 100) ** (1 / 3) - 1
+            base = end_val / ((1 + r) ** 2)
 
-            start_value = end_value / ((1 + monthly_rate) ** 2)
+            return [{
+                "month": (end - pd.DateOffset(months=2 - j) + pd.offsets.MonthEnd(0)),
+                "monthly_rate": round(r * 100, 6),
+                f"monthly_{value_column}": base * ((1 + r) ** j),
+                "quarterly_rate": rate_pct
+            } for j in range(3)]
 
-
-            for j in range(3):
-                month = quarter_end - pd.DateOffset(months=2 - j)
-                month_end = month + pd.offsets.MonthEnd(0)
-                compounded_value = start_value * ((1 + monthly_rate) ** j)
-
-                records.append({
-                    "month": month_end,
-                    "monthly_rate": round(monthly_rate * 100, 6),
-                    f"monthly_{value_column}": compounded_value,
-                    "quarterly_rate": quarterly_rate_pct,
-                })
+        for row in df_data.sort_index().itertuples():
+            records.extend(distribute_row(row))
 
         df_monthly = pd.DataFrame(records)
         df_monthly = df_monthly[

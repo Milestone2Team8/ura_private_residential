@@ -58,7 +58,7 @@ def prepare_property_index_data( df_clean: pd.DataFrame, start_date: str = "2019
         df_quarterly_index.dropna(inplace=True)
         df_quarterly_index.index = df_quarterly_index.index.to_period("M")
         df_monthly_index = distribute_quarterly_to_monthly_rate(df_quarterly_index, "rate"
-            , "price_index","2020-04-01", "2025-04-01")
+            , "price_index","2019-12-01", "2025-04-01")
         return df_monthly_index
     except Exception as e:
         raise e
