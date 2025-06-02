@@ -15,6 +15,7 @@ import pandas as pd
 import folium
 import osmnx as ox
 from shapely.geometry import Point
+import geopandas as gpd
 
 def get_urban_polygons(place="Singapore"):
     """
@@ -33,6 +34,38 @@ def get_urban_polygons(place="Singapore"):
     gdf = ox.features_from_place(place, tags)
     gdf = gdf[gdf.get('natural') != 'water']
     gdf = gdf[gdf.geometry.type.isin(['Polygon', 'MultiPolygon'])]
+
+    urban_area = gdf.dissolve()
+    urban_area['geometry'] = urban_area['geometry'].simplify(tolerance=0.0005)
+
+    return urban_area
+
+def get_ura_urban_polygons():
+    """
+    Fetches and processes urban planning polygon data from Singapore's URA dataset API.
+
+    This function downloads urban area polygon data from the Singapore government's open data API, 
+    parses it into a GeoDataFrame, sets the geometry and coordinate reference system (CRS), 
+    dissolves individual polygons into a single unified urban area, and simplifies the geometry 
+    for more efficient spatial processing.
+
+    Returns:
+        geopandas.GeoDataFrame: A simplified GeoDataFrame containing 
+        the dissolved urban area geometry with EPSG:4326 as the coordinate reference system.
+    """
+    dataset_id = "d_4765db0e87b9c86336792efe8a1f7a66"
+    url = "https://api-open.data.gov.sg/v1/public/api/datasets/" + dataset_id + "/poll-download"
+
+    response = requests.get(url, timeout=10)
+    json_data = response.json()
+
+    url = json_data['data']['url']
+    response = requests.get(url, timeout=10)
+    response = response.json()
+
+    gdf = gpd.GeoDataFrame.from_features(response['features'])
+    gdf = gdf.set_geometry("geometry")
+    gdf.set_crs(epsg=4326, inplace=True)
 
     urban_area = gdf.dissolve()
     urban_area['geometry'] = urban_area['geometry'].simplify(tolerance=0.0005)
@@ -139,7 +172,10 @@ def plot_google_poi(gdf_urban, grid_points, poi_df, output_html_path, radius):
     m.save(output_html_path)
 
 
-def fetch_google_data(g_api_key, poi_type, radius=500, place="Singapore", test_run=False):
+def fetch_google_data(g_api_key, poi_type, radius=550,
+                      test_run=False,
+#                      place="Singapore"
+                      ):
     """
     Fetches POIs of a given type from Google Places API inside urban areas of a given place.
 
@@ -149,8 +185,9 @@ def fetch_google_data(g_api_key, poi_type, radius=500, place="Singapore", test_r
             - list: Error coordinates
     """
 
-    gdf_urban = get_urban_polygons(place=place)
-    grid_points = create_grid(urban_geom= gdf_urban.geometry.values[0])
+#    gdf_urban = get_urban_polygons(place=place)
+    gdf_urban = get_ura_urban_polygons()
+    grid_points = create_grid(urban_geom= gdf_urban.geometry.values[0], step=0.007)
 
     all_results = []
     error_points = []
@@ -172,7 +209,7 @@ def fetch_google_data(g_api_key, poi_type, radius=500, place="Singapore", test_r
     df['lat'] = df['geometry'].apply(lambda x: x['location']['lat'])
     df['lng'] = df['geometry'].apply(lambda x: x['location']['lng'])
 
-    with open(Path(f"./src/data/plot/raw_google_data_{poi_type}.json"),
+    with open(Path(f"./src/data/input/raw_google_data_{poi_type}.json"),
                "w", encoding="utf-8") as f:
         json.dump(all_results, f, indent=4)
 
@@ -192,10 +229,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Fetch POI data from Google Places API")
     parser.add_argument("--poi_type", type=str, required=True,
                         help="Type of POI to fetch (e.g., restaurant, school)")
-    parser.add_argument("--radius", type=int, default=500,
-                        help="Search radius in meters (default: 500)")
-    parser.add_argument("--place", type=str, default="Singapore",
-                        help="Place to get POIs from (default: Singapore)")
+    parser.add_argument("--radius", type=int, default=550,
+                        help="Search radius in meters (default: 550)")
+#    parser.add_argument("--place", type=str, default="Singapore",
+#                        help="Place to get POIs from (default: Singapore)")
     parser.add_argument("--test_run", action='store_true',
                         help="Toggle test run")
 
@@ -207,6 +244,6 @@ if __name__ == "__main__":
         g_api_key=api_key,
         poi_type=args.poi_type,
         radius=args.radius,
-        place=args.place,
-        test_run=args.test_run
+        test_run=args.test_run,
+#        place=args.place
     )
