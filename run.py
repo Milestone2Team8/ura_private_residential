@@ -48,6 +48,11 @@ def run_all(poi_type_list):
     df_nearest_mrt, df_nearest_lrt = find_nearest_train_stn()
     df_google_clean = clean_google_data(poi_type_list)
     df_google_nearest = find_nearby_google_poi(poi_type_list)
+    run_secondary()
+
+    # TO-DO: Left join secondary data to df_ura_clean
+
+def run_secondary():
     df_population_clean = clean_population_data()
     df_monthly_population_growth_rates = prepare_population_data(df_population_clean)
     df_marriage_clean = clean_marriage_data()
@@ -60,8 +65,7 @@ def run_all(poi_type_list):
     df_monthly_property_index = prepare_property_index_data(df_property_index_clean,
                                 "2019-12-01", "2025-04-01")
 
-    # TO-DO: Left join secondary data to df_ura_clean
-    
+
 if __name__ == "__main__":
     import argparse
 
