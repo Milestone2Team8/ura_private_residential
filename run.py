@@ -53,6 +53,9 @@ def run_all(poi_type_list):
     # TO-DO: Left join secondary data to df_ura_clean
 
 def run_secondary():
+    """
+    Runs secondary dataset pipeline jobs
+    """
     df_population_clean = clean_population_data()
     df_monthly_population_growth_rates = prepare_population_data(df_population_clean)
     df_marriage_clean = clean_marriage_data()
