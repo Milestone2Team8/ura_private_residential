@@ -8,6 +8,7 @@ for downstream unsupervised and supervised learning tasks.
 from src.clean_ura_data import clean_ura_data
 from src.find_nearest_train_stn import find_nearest_train_stn
 from src.clean_google_data import clean_google_data
+from src.find_nearest_google_data import find_nearby_google_poi
 from src.clean_prepare_population_data import (
     clean_population_data,
     prepare_population_data
@@ -43,15 +44,9 @@ def run_all(poi_type_list):
     Returns:
         tuple: Cleaned URA dataframe and combined Google POI GeoDataFrame.
     """
-    #df_clean = clean_ura_data()
-    #df_nearest_mrt, df_nearest_lrt = find_nearest_train_stn()
-    #df_google_clean = clean_google_data(poi_type_list)
-    run_secondary()
-
-    # TO-DO: Left join secondary data to df_ura_clean
-
-
-def run_secondary():
+    df_clean = clean_ura_data()
+    df_nearest_mrt, df_nearest_lrt = find_nearest_train_stn()
+    df_google_clean = clean_google_data(poi_type_list)
     df_population_clean = clean_population_data()
     df_monthly_population_growth_rates = prepare_population_data(df_population_clean)
     df_marriage_clean = clean_marriage_data()
