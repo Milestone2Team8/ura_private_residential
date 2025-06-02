@@ -4,9 +4,11 @@ economic indicator datasets, such as the Private home index, CPI, population
 growth, and marriage rates, to prepare them for further analysis.
 """
 
+import re
 import pandas as pd
-from sklearn.linear_model import LinearRegression
 import numpy as np
+from sklearn.linear_model import LinearRegression
+
 
 
 def clean_singstat_ds(df_raw):
@@ -43,7 +45,7 @@ def clean_singstat_ds(df_raw):
     except Exception as e:
         raise e
 
-def parse_quarter(row):
+def parse_quarter(row, separator = None):
     """
     This method converts quarter to month, used for hdb resale index.
 
@@ -55,10 +57,13 @@ def parse_quarter(row):
     :raises: Exception
     """
     try:
-        year, quarter = row.split()
-        quarter = int(quarter[0])
-        month = (quarter - 1) * 3 + 1
-        return pd.Timestamp(f"{year}-{month:02d}-01")
+        if separator:
+            year, quarter = row.split(separator)
+        else:
+            year, quarter = row.split()
+        quarter = int(re.search(r"\d", quarter).group())
+        end_month = quarter * 3
+        return pd.Timestamp(f"{year}-{end_month:02d}-01")
     except Exception as e:
         raise e
 
@@ -192,6 +197,64 @@ def distribute_yearly_to_monthly_rate(
         df_monthly_rates.set_index("month", inplace=True)
         df_monthly_rates.index = df_monthly_rates.index.to_period("M")
         return df_monthly_rates
+    except Exception as e:
+        raise e
+
+
+def distribute_quarterly_to_monthly_rate(
+    df_data, column, value_column, start_date, end_date
+):
+    """
+    This method distributes quarterly percentage rates to monthly rates using compound growth.
+
+    :param df_data: DataFrame indexed by month (PeriodIndex), containing quarterly data
+    :type df_data: pd.DataFrame
+    :param column: The column containing quarterly percentage rates (e.g., 'quarterly_growth')
+    :type column: str
+    :param value_column: The column containing base index values (e.g., 'price_index')
+    :type value_column: str
+    :param start_date: The start date for filtering (inclusive)
+    :type start_date: str
+    :param end_date: The end date for filtering (inclusive)
+    :type end_date: str
+    :return: DataFrame with distributed monthly rates and monthly index values
+    :rtype: pd.DataFrame
+    :raises: Exception
+    """
+    try:
+        records = []
+
+        def distribute_row(row):
+            end = row.Index.to_timestamp()
+            rate_pct = getattr(row, column)
+            end_val = getattr(row, value_column)
+
+            if pd.isna(rate_pct) or pd.isna(end_val):
+                return []
+
+            r = (1 + rate_pct / 100) ** (1 / 3) - 1
+            base = end_val / ((1 + r) ** 2)
+
+            return [{
+                "month": (end - pd.DateOffset(months=2 - j) + pd.offsets.MonthEnd(0)),
+                "monthly_rate": round(r * 100, 6),
+                f"monthly_{value_column}": base * ((1 + r) ** j),
+                "quarterly_rate": rate_pct
+            } for j in range(3)]
+
+        for row in df_data.sort_index().itertuples():
+            records.extend(distribute_row(row))
+
+        df_monthly = pd.DataFrame(records)
+        df_monthly = df_monthly[
+            (df_monthly["month"] >= pd.to_datetime(start_date)) &
+            (df_monthly["month"] <= pd.to_datetime(end_date))
+        ]
+        df_monthly.set_index("month", inplace=True)
+        df_monthly.index = df_monthly.index.to_period("M")
+
+        return df_monthly
+
     except Exception as e:
         raise e
 
