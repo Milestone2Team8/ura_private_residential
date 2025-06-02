@@ -24,6 +24,10 @@ from src.clean_prepare_sora_data import (
     clean_sora_data,
     prepare_sora_data
 )
+from src.clean_prepare_property_index_data import (
+    clean_property_index_data,
+    prepare_property_index_data
+)
 
 # pylint: disable=unused-variable
 
@@ -50,7 +54,9 @@ def run_all(poi_type_list):
     df_monthly_cpi = prepare_cpi_data(df_cpi_clean)
     df_sora_clean = clean_sora_data()
     df_monthly_sora = prepare_sora_data(df_sora_clean, "2019-12-31", "2025-04-01")
-
+    df_property_index_clean = clean_property_index_data()
+    df_monthly_property_index = prepare_property_index_data(df_property_index_clean, "2019-12-01", "2025-04-01")
+    
     # TO-DO: Left join secondary data to df_ura_clean
 
 

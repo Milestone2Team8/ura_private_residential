@@ -1,9 +1,8 @@
 """
-Module to clean and process marriage dataset.
+Module to clean and process sora rates dataset.
 
 Process includes functions to:
-- Predict missing year 2023/2024
-- Convert yearly rates to monthly rates.
+- Convert daily rates to monthly rates.
 """
 
 from pathlib import Path
