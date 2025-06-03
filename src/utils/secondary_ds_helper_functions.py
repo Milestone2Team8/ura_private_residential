@@ -10,7 +10,6 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 
 
-
 def clean_singstat_ds(df_raw):
     """
     This method will be used to clean Singstat datasets.
@@ -138,20 +137,34 @@ def _infer_granularity(df, date_column):
     :return: Inferred granularity: 'yearly', 'monthly', or 'daily'
     :rtype: str
     """
+    result = "yearly"
     if isinstance(df[date_column].iloc[0], (int, np.integer)):
-        return 'yearly'
-    df[date_column] = pd.to_datetime(df[date_column], errors='coerce')
+        return result
+
+    if pd.api.types.is_period_dtype(df[date_column]):
+        df[date_column] = df[date_column].dt.to_timestamp()
+    else:
+        df[date_column] = pd.to_datetime(df[date_column], errors='coerce')
+
     df = df.dropna(subset=[date_column])
+
     freq = pd.infer_freq(df[date_column])
+
     if freq:
-        return 'daily' if freq.startswith('D') else 'monthly' if freq.startswith('M') else 'yearly'
+        if freq.startswith('D'):
+            result = "daily"
+        if freq.startswith('M'):
+            result = "monthly"
+
     diffs = df[date_column].diff().dropna().dt.days
     median_diff = diffs.median()
-    if median_diff <= 1:
-        return 'daily'
+
     if median_diff <= 31:
-        return 'monthly'
-    return 'yearly'
+        result = "monthly"
+    if median_diff <= 1:
+        result = "daily"
+
+    return result
 
 
 def _predict_yearly(df, date_column, value_column, target):
@@ -195,15 +208,26 @@ def _predict_monthly(df, date_column, value_column, target):
     :rtype: pd.DataFrame
     """
     df[date_column] = df[date_column].dt.to_period('M')
-    x = pd.to_datetime(df[date_column].astype(str)).astype(np.int64).reshape(-1, 1)
+    x = pd.to_datetime(df[date_column].astype(str)).astype(np.int64).to_numpy().reshape(-1, 1)
     y = df[value_column].values
     model = LinearRegression()
     model.fit(x, y)
+
     start = df[date_column].max().to_timestamp() + pd.offsets.MonthBegin()
-    future_dates = pd.date_range(start=start, end=pd.to_datetime(target), freq='MS')
-    future_x = future_dates.astype(np.int64).reshape(-1, 1)
+
+    if isinstance(target, int):
+        end = pd.to_datetime(f"{target}-01-01")
+    else:
+        end = pd.to_datetime(target)
+
+    future_dates = pd.date_range(start=start, end=end, freq='MS')
+    future_x = future_dates.astype(np.int64).to_numpy().reshape(-1, 1)
     future_y = model.predict(future_x)
-    return pd.DataFrame({date_column: future_dates.to_period('M'), value_column: future_y})
+
+    return pd.DataFrame({
+        date_column: future_dates.to_period('M'),
+        value_column: future_y
+    })
 
 
 def _predict_daily(df, date_column, value_column, target):
@@ -250,6 +274,11 @@ def predict_missing_data(df_data, date_column, value_column, target):
     """
     try:
         df = df_data.copy()
+
+        if date_column is None:
+            df = df.reset_index()
+            date_column = df.columns[0]
+
         granularity = _infer_granularity(df, date_column)
         df = df.sort_values(by=date_column)
 
@@ -262,7 +291,7 @@ def predict_missing_data(df_data, date_column, value_column, target):
         else:
             raise ValueError("Unsupported date granularity.")
 
-        return pd.concat([df_data, df_future], ignore_index=True).sort_values(by=date_column)
+        return pd.concat([df, df_future], ignore_index=True).sort_values(by=date_column)
 
     except Exception as e:
         raise e
@@ -373,87 +402,31 @@ def distribute_quarterly_to_monthly_rate(
         raise e
 
 
-def prepare_housing_cpi(
-        df_cpi_housing: pd.DataFrame,
-        start_date: str = "2019-12-01",
-        end_date: str = "2025-04-01",
-    ) -> pd.DataFrame:
+def concat_and_filter_by_date(df_list, key_column, start_date, end_date):
     """
-    This method cleans and prepares the Housing & Utilities CPI
-    dataset by converting the date column, calculating the adjusted
-    CPI, and computing the CPI growth rate.
+    Concatenates a list of DataFrames, filters by a date range on the specified date column.
 
-    :param df_cpi_housing: Cleaned CPI dataframe
-    :type df_cpi_housing: pd.DataFrame
-    :param start_date: The start date for the dataset, defaults to '2019-12-01'
-    :type start_date: str, optional
-    :param end_date: The end date for the dataset, defaults to '2025-04-01'
-    :type end_date: str, optional
-    :return: DataFrame with monthly CPI rates
+    :param df_list: List of pandas DataFrames to concatenate
+    :type df_list: list of pd.DataFrame
+    :param key_column: identify which one is key column
+    :type key_column: str
+    :param start_date: Start date YYYY-MM-DD 
+    :type start_date: str
+    :param end_date: End date YYYY-MM-DD 
+    :type end_date: str
+    :return: Filtered DataFrame
     :rtype: pd.DataFrame
-    :raises: Exception
     """
-    try:
-        start_date_dt = pd.to_datetime(start_date)
-        base_date_dt = start_date_dt - pd.offsets.MonthEnd(1)
 
-        df_cpi_housing["month"] = pd.to_datetime(
-            df_cpi_housing["month"].str.strip(), format="%Y %b", errors="coerce"
-        )
-        df_cpi = df_cpi_housing[
-            (df_cpi_housing["month"] >= start_date) &
-            (df_cpi_housing["month"] <= end_date)
-        ].reset_index(drop=True)
-        df_cpi["month"] = df_cpi["month"] - pd.offsets.MonthEnd(1)
+    df_list = [df.set_index(key_column, inplace=False) for df in df_list]
+    df_merged = pd.concat(df_list, axis=1)
+    df_merged = df_merged.reset_index()
+    df_merged["date_index"] = df_merged[key_column].dt.to_timestamp()
 
-        base_cpi = (
-            df_cpi[df_cpi["month"] == base_date_dt]["cpi_housing"].values[0]
-        )
-        df_cpi["cpi_adjusted"] = df_cpi["cpi_housing"] / base_cpi
-        df_cpi.drop(columns=["Data Series"], inplace=True)
-        df_cpi.set_index("month", inplace=True)
-        df_cpi.sort_index(inplace=True)
+    df_merged_filtered = df_merged[(df_merged["date_index"] >= pd.to_datetime(start_date)) \
+         & (df_merged["date_index"] <= pd.to_datetime(end_date))]
 
-        df_cpi = df_cpi.apply(pd.to_numeric)
-
-        df_cpi["cpi"] = df_cpi["cpi_adjusted"].pct_change()
-        df_cpi.drop(columns=["cpi_housing"], inplace=True)
-        df_cpi.drop(columns=["cpi_adjusted"], inplace=True)
-        df_cpi = df_cpi[df_cpi.index >= "2020-01-31"]
-        df_cpi.index = df_cpi.index.to_period("M")
-        return df_cpi
-    except Exception as e:
-        raise e
-
-
-def clean_sora(df_sora):
-    """
-    This method cleans and prepares the SORA dataset by adjusting
-    the column headers, converting the date column, and resampling
-    the data to monthly end frequency.
-
-    :param df_sora: Raw SORA dataframe
-    :type df_sora: pd.DataFrame
-    :return: Cleaned and prepared SORA dataframe
-    :rtype: pd.DataFrame
-    :raises: Exception
-    """
-    try:
-        df_clean = df_sora.copy()
-        df_clean.columns = (
-            ['Value Date', 'Unnamed 1', 'Index', 'Publication Date', 'SORA']
-        )
-        df_clean = df_clean.drop(columns=['Unnamed 1', 'Index'])
-        df_clean = df_clean.drop(0).reset_index(drop=True)
-
-        df_clean['Publication Date'] = (
-            pd.to_datetime(
-                df_clean['Publication Date'],
-                format='%d-%b-%y',
-                errors='coerce')
-        )
-        df_clean['SORA'] = pd.to_numeric(df_clean['SORA'], errors='coerce')
-        df_clean.set_index('Publication Date', inplace=True)
-        return df_clean
-    except Exception as e:
-        raise e
+    df_merged_filtered = df_merged_filtered.set_index("date_index")
+    #with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+    #    print(df_merged_filtered)
+    return df_merged_filtered

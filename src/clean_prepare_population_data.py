@@ -10,7 +10,7 @@ Process includes functions to:
 
 from pathlib import Path
 import pandas as pd
-from src.secondary_ds_helper_functions import (clean_singstat_ds,
+from src.utils.secondary_ds_helper_functions import (clean_singstat_ds,
                         clean_and_prepare_dataset, predict_missing_data,
                         distribute_yearly_to_monthly_rate)
 
@@ -33,7 +33,8 @@ def clean_population_data(input_path=INPUT_POPULATION_PATH):
     return df_population_clean
 
 
-def prepare_population_data(df_clean : pd.DataFrame):
+def prepare_population_data(df_clean : pd.DataFrame, start_year: str = "2020",
+                        end_year:str = "2025"):
 
     """
     Cleans yearly population growth dataframe, and convert
@@ -41,6 +42,10 @@ def prepare_population_data(df_clean : pd.DataFrame):
     
     :param df_clean: Dataframe to be prepared for analysis
     :type df_clean: pd.DataFrame
+    :param start_year: Start year (inclusive) in YYYY
+    :type start_date: str
+    :param end_year: End year (inclusive) in YYYY
+    :type end_year: str
     :return: Manipulated and resampled dataframe ready for analysis
     :rtype: pd.DataFrame
     """
@@ -55,7 +60,8 @@ def prepare_population_data(df_clean : pd.DataFrame):
     df_yearly_population_growth_rates.dropna(inplace=True)
 
     df_yearly_population_growth_rates = predict_missing_data(
-        df_yearly_population_growth_rates, "year_index", "population", 2026
+        df_yearly_population_growth_rates, "year_index", "population",
+        int(end_year) + 1
     )
 
     df_yearly_population_growth_rates["population_growth_rate"] = (
@@ -63,7 +69,9 @@ def prepare_population_data(df_clean : pd.DataFrame):
     )
 
     df_monthly_population_growth_rates = distribute_yearly_to_monthly_rate(
-        df_yearly_population_growth_rates, "population_growth_rate", 2020, 2025
+        df_yearly_population_growth_rates, "population_growth_rate", int(start_year),
+        int(end_year)
     )
+    df_monthly_population_growth_rates = df_monthly_population_growth_rates.reset_index()
 
     return df_monthly_population_growth_rates

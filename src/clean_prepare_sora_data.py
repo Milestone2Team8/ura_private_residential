@@ -7,7 +7,6 @@ Process includes functions to:
 
 from pathlib import Path
 import pandas as pd
-from src.secondary_ds_helper_functions import clean_sora
 
 INPUT_SORA_PATH = Path("./src/data/input/Domestic_Interest_Rates.csv")
 
@@ -22,13 +21,30 @@ def clean_sora_data(input_path=INPUT_SORA_PATH):
     """
 
     df_sora = pd.read_csv(input_path)
-    df_sora_clean = clean_sora(df_sora)
+    df_sora_clean = df_sora.copy()
+    try:
+        df_sora_clean.columns = (
+            ['Value Date', 'Unnamed 1', 'Index', 'Publication Date', 'SORA']
+        )
+        df_sora_clean = df_sora_clean.drop(columns=['Unnamed 1', 'Index'])
+        df_sora_clean = df_sora_clean.drop(0).reset_index(drop=True)
+
+        df_sora_clean['Publication Date'] = (
+            pd.to_datetime(
+                df_sora_clean['Publication Date'],
+                format='%d-%b-%y',
+                errors='coerce')
+        )
+        df_sora_clean['SORA'] = pd.to_numeric(df_sora_clean['SORA'], errors='coerce')
+        df_sora_clean.set_index('Publication Date', inplace=True)
+    except Exception as e:
+        raise e
 
     return df_sora_clean
 
 
 def prepare_sora_data(df_clean : pd.DataFrame, start_date : str = "2019-01-01" ,
-    end_date : str = "2025-04-01"):
+    end_date : str = "2025-05-12"):
     """
     Filters a DataFrame by date index, resamples to month-end frequency, 
     and formats the index.
@@ -51,5 +67,6 @@ def prepare_sora_data(df_clean : pd.DataFrame, start_date : str = "2019-01-01" ,
 
     df_monthly_sora.drop(columns=['Value Date'], inplace=True)
     df_monthly_sora.index = df_monthly_sora.index.to_period('M')
-
+    df_monthly_sora = df_monthly_sora.reset_index()
+    df_monthly_sora = df_monthly_sora.rename(columns={'Publication Date': 'month'})
     return df_monthly_sora
