@@ -11,7 +11,7 @@ Process includes functions to:
 from pathlib import Path
 import pandas as pd
 from src.secondary_ds_helper_functions import (clean_singstat_ds,
-                        clean_and_prepare_dataset, predict_missing_year,
+                        clean_and_prepare_dataset, predict_missing_data,
                         distribute_yearly_to_monthly_rate)
 
 
@@ -44,26 +44,26 @@ def prepare_population_data(df_clean : pd.DataFrame):
     :return: Manipulated and resampled dataframe ready for analysis
     :rtype: pd.DataFrame
     """
-
-    df_monthly_population_growth_rates = clean_and_prepare_dataset(
+    df_yearly_population_growth_rates = clean_and_prepare_dataset(
         df_clean, "Total Population (Number)", "population"
     )
 
-    df_monthly_population_growth_rates["population"] = pd.to_numeric(
-        df_monthly_population_growth_rates["population"], errors="coerce"
+    df_yearly_population_growth_rates["population"] = pd.to_numeric(
+        df_yearly_population_growth_rates["population"], errors="coerce"
     )
 
-    df_monthly_population_growth_rates["population_growth_rate"] = (
-        df_monthly_population_growth_rates["population"].pct_change()
+    df_yearly_population_growth_rates.dropna(inplace=True)
+
+    df_yearly_population_growth_rates = predict_missing_data(
+        df_yearly_population_growth_rates, "year_index", "population", 2026
     )
 
-    df_monthly_population_growth_rates.dropna(inplace=True)
-    df_monthly_population_growth_rates = predict_missing_year(
-        df_monthly_population_growth_rates, "population_growth_rate", 2025
+    df_yearly_population_growth_rates["population_growth_rate"] = (
+        df_yearly_population_growth_rates["population"].pct_change()
     )
 
     df_monthly_population_growth_rates = distribute_yearly_to_monthly_rate(
-        df_monthly_population_growth_rates, "population_growth_rate", 2020, 2024
+        df_yearly_population_growth_rates, "population_growth_rate", 2020, 2025
     )
 
     return df_monthly_population_growth_rates

@@ -9,7 +9,7 @@ Process includes functions to:
 from pathlib import Path
 import pandas as pd
 from src.secondary_ds_helper_functions import (clean_singstat_ds,
-                        clean_and_prepare_dataset, predict_missing_year,
+                        clean_and_prepare_dataset, predict_missing_data,
                         distribute_yearly_to_monthly_rate)
 
 INPUT_MARRIAGE_PATH = Path("./src/data/input/M830102.xlsx")
@@ -42,22 +42,18 @@ def prepare_marriage_data(df_clean : pd.DataFrame):
     :rtype: pd.DataFrame
     """
 
-    df_monthly_marriage_rates = clean_and_prepare_dataset(
+    df_yearly_marriage_rates = clean_and_prepare_dataset(
         df_clean,
         "Crude Marriage Rate (Per 1,000 Residents)",
         "marriage_crude_rate",
     )
 
-    df_monthly_marriage_rates = predict_missing_year(
-        df_monthly_marriage_rates, "marriage_crude_rate", 2024
-    )
-
-    df_monthly_marriage_rates = predict_missing_year(
-        df_monthly_marriage_rates, "marriage_crude_rate", 2025
+    df_yearly_marriage_rates = predict_missing_data(
+        df_yearly_marriage_rates, "year_index", "marriage_crude_rate", 2026
     )
 
     df_monthly_marriage_rates = distribute_yearly_to_monthly_rate(
-        df_monthly_marriage_rates, "marriage_crude_rate", 2020, 2024
+        df_yearly_marriage_rates, "marriage_crude_rate", 2020, 2025
     )
 
     return df_monthly_marriage_rates
