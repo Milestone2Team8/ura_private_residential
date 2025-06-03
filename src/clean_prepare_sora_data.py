@@ -28,6 +28,8 @@ def clean_sora_data(input_path=INPUT_SORA_PATH):
         )
         df_sora_clean = df_sora_clean.drop(columns=['Unnamed 1', 'Index'])
         df_sora_clean = df_sora_clean.drop(0).reset_index(drop=True)
+        df_sora_clean['Publication Date'] = df_sora_clean['Publication Date'].\
+            str.replace('Sept', 'Sep', regex=False)
 
         df_sora_clean['Publication Date'] = (
             pd.to_datetime(
@@ -58,7 +60,6 @@ def prepare_sora_data(df_clean : pd.DataFrame, start_date : str = "2019-01-01" ,
     :return: Manipulated and resampled dataframe ready for analysis
     :rtype: pd.DataFrame
     """
-
     if start_date:
         df_clean = df_clean[df_clean.index >= start_date]
     if end_date:
