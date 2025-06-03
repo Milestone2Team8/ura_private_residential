@@ -127,29 +127,143 @@ def clean_and_prepare_dataset(
         raise e
 
 
-def predict_missing_year(df_data, column, year):
+def _infer_granularity(df, date_column):
     """
-    This method predicts the missing value for a specific year
-    using linear regression.
+    Infers the time granularity of a date column.
 
-    :param df_data: DataFrame containing the data
+    :param df: DataFrame with a time-based column
+    :type df: pd.DataFrame
+    :param date_column: Name of the column containing date/year values
+    :type date_column: str
+    :return: Inferred granularity: 'yearly', 'monthly', or 'daily'
+    :rtype: str
+    """
+    if isinstance(df[date_column].iloc[0], (int, np.integer)):
+        return 'yearly'
+    df[date_column] = pd.to_datetime(df[date_column], errors='coerce')
+    df = df.dropna(subset=[date_column])
+    freq = pd.infer_freq(df[date_column])
+    if freq:
+        return 'daily' if freq.startswith('D') else 'monthly' if freq.startswith('M') else 'yearly'
+    diffs = df[date_column].diff().dropna().dt.days
+    median_diff = diffs.median()
+    if median_diff <= 1:
+        return 'daily'
+    if median_diff <= 31:
+        return 'monthly'
+    return 'yearly'
+
+
+def _predict_yearly(df, date_column, value_column, target):
+    """
+    Performs linear regression and predicts yearly values up to the given year (inclusive).
+
+    :param df: DataFrame with yearly data
+    :type df: pd.DataFrame
+    :param date_column: Column name containing years (int)
+    :type date_column: str
+    :param value_column: Column name of the values to predict
+    :type value_column: str
+    :param target: Final year (inclusive) to predict up to
+    :type target: int
+    :return: DataFrame of predicted years and values
+    :rtype: pd.DataFrame
+    """
+    x = df[date_column].values.reshape(-1, 1)
+    y = df[value_column].values
+    model = LinearRegression()
+    model.fit(x, y)
+    start = int(df[date_column].max()) + 1
+    future_years = list(range(start, int(target) + 1))
+    preds = model.predict(np.array(future_years).reshape(-1, 1))
+    return pd.DataFrame({date_column: future_years, value_column: preds})
+
+
+def _predict_monthly(df, date_column, value_column, target):
+    """
+    Performs linear regression and predicts monthly values up to the given date (inclusive).
+
+    :param df: DataFrame with monthly data
+    :type df: pd.DataFrame
+    :param date_column: Column name containing datetime values
+    :type date_column: str
+    :param value_column: Column name of the values to predict
+    :type value_column: str
+    :param target: Final month (inclusive) to predict up to
+    :type target: str or pd.Timestamp
+    :return: DataFrame of predicted months and values
+    :rtype: pd.DataFrame
+    """
+    df[date_column] = df[date_column].dt.to_period('M')
+    x = pd.to_datetime(df[date_column].astype(str)).astype(np.int64).reshape(-1, 1)
+    y = df[value_column].values
+    model = LinearRegression()
+    model.fit(x, y)
+    start = df[date_column].max().to_timestamp() + pd.offsets.MonthBegin()
+    future_dates = pd.date_range(start=start, end=pd.to_datetime(target), freq='MS')
+    future_x = future_dates.astype(np.int64).reshape(-1, 1)
+    future_y = model.predict(future_x)
+    return pd.DataFrame({date_column: future_dates.to_period('M'), value_column: future_y})
+
+
+def _predict_daily(df, date_column, value_column, target):
+    """
+    Performs linear regression and predicts daily values up to the given date (inclusive).
+
+    :param df: DataFrame with daily data
+    :type df: pd.DataFrame
+    :param date_column: Column name containing datetime values
+    :type date_column: str
+    :param value_column: Column name of the values to predict
+    :type value_column: str
+    :param target: Final date (inclusive) to predict up to
+    :type target: str or pd.Timestamp
+    :return: DataFrame of predicted dates and values
+    :rtype: pd.DataFrame
+    """
+    x = df[date_column].astype(np.int64).values.reshape(-1, 1)
+    y = df[value_column].values
+    model = LinearRegression()
+    model.fit(x, y)
+    start = df[date_column].max() + pd.Timedelta(days=1)
+    future_dates = pd.date_range(start=start, end=pd.to_datetime(target), freq='D')
+    future_x = future_dates.astype(np.int64).reshape(-1, 1)
+    future_y = model.predict(future_x)
+    return pd.DataFrame({date_column: future_dates, value_column: future_y})
+
+
+def predict_missing_data(df_data, date_column, value_column, target):
+    """
+    Predicts future values using linear regression based on date granularity.
+
+    :param df_data: DataFrame with time series data
     :type df_data: pd.DataFrame
-    :param column: The column to predict
-    :type column: str
-    :param year: The year to predict
-    :type year: int
-    :return: DataFrame with the predicted year added
+    :param date_column: Name of the column containing date/year/datetime information
+    :type date_column: str
+    :param value_column: Name of the column containing values to predict
+    :type value_column: str
+    :param target: Target date/year/month to predict up to (inclusive)
+    :type target: int or str or pd.Timestamp
+    :return: DataFrame with future predictions added
     :rtype: pd.DataFrame
     :raises: Exception
     """
     try:
-        x = df_data["year_index"].values.reshape(-1, 1)
-        y = df_data[column].values
-        model = LinearRegression()
-        model.fit(x, y)
-        predicted_value = model.predict(np.array([[year]]))[0]
-        predicted_row = pd.DataFrame({"year_index": [year], column: [predicted_value]})
-        return pd.concat([df_data, predicted_row], ignore_index=True)
+        df = df_data.copy()
+        granularity = _infer_granularity(df, date_column)
+        df = df.sort_values(by=date_column)
+
+        if granularity == 'yearly':
+            df_future = _predict_yearly(df, date_column, value_column, target)
+        elif granularity == 'monthly':
+            df_future = _predict_monthly(df, date_column, value_column, target)
+        elif granularity == 'daily':
+            df_future = _predict_daily(df, date_column, value_column, target)
+        else:
+            raise ValueError("Unsupported date granularity.")
+
+        return pd.concat([df_data, df_future], ignore_index=True).sort_values(by=date_column)
+
     except Exception as e:
         raise e
 
