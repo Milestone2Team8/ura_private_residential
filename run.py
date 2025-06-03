@@ -29,6 +29,7 @@ from src.clean_prepare_property_index_data import (
     clean_property_index_data,
     prepare_property_index_data
 )
+from src.utils.secondary_ds_helper_functions import concat_and_filter_by_date
 
 # pylint: disable=unused-variable
 
@@ -48,7 +49,7 @@ def run_all(poi_type_list):
     df_nearest_mrt, df_nearest_lrt = find_nearest_train_stn()
     df_google_clean = clean_google_data(poi_type_list)
     df_google_nearest = find_nearby_google_poi(poi_type_list)
-    run_secondary()
+    df_secondary = run_secondary()
 
     # TO-DO: Left join secondary data to df_ura_clean
 
@@ -56,18 +57,40 @@ def run_secondary():
     """
     Runs secondary dataset pipeline jobs
     """
-    df_population_clean = clean_population_data()
-    df_monthly_population_growth_rates = prepare_population_data(df_population_clean)
-    df_marriage_clean = clean_marriage_data()
-    df_monthly_marriage_growth_rates = prepare_marriage_data(df_marriage_clean)
-    df_cpi_clean = clean_cpi_data()
-    df_monthly_cpi = prepare_cpi_data(df_cpi_clean)
-    df_sora_clean = clean_sora_data()
-    df_monthly_sora = prepare_sora_data(df_sora_clean, "2019-12-31", "2025-04-01")
-    df_property_index_clean = clean_property_index_data()
-    df_monthly_property_index = prepare_property_index_data(df_property_index_clean,
-                                "2019-12-01", "2025-04-01")
+    df_monthly_population_growth_rates = prepare_population_data(
+        clean_population_data(), 
+        "2020", 
+        "2025"
+    )
+    
+    df_monthly_marriage_growth_rates = prepare_marriage_data(
+        clean_marriage_data(),
+        "2020", 
+        "2025"
+    )
 
+    df_monthly_cpi = prepare_cpi_data(clean_cpi_data(), 
+        "2019-12-01", 
+        "2025-12-01"
+    )
+    
+    df_monthly_sora = prepare_sora_data(
+         clean_sora_data(), 
+         "2019-12-31", 
+         "2025-12-01"
+    )
+
+    df_monthly_property_index = prepare_property_index_data(
+        clean_property_index_data(),
+        "2019-12-01", 
+        "2025-04-01"
+    )
+
+    return concat_and_filter_by_date([df_monthly_population_growth_rates,
+            df_monthly_marriage_growth_rates,
+            df_monthly_cpi,
+            df_monthly_sora,
+            df_monthly_property_index], "month", "2020-01-01", "2025-05-30")
 
 if __name__ == "__main__":
     import argparse
