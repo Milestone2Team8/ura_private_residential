@@ -62,7 +62,7 @@ def run_secondary():
         "2020",
         "2025"
     )
-    
+
     df_monthly_marriage_growth_rates = prepare_marriage_data(
         clean_marriage_data(),
         "2020",
@@ -73,7 +73,7 @@ def run_secondary():
         "2019-12-01",
         "2025-12-01"
     )
-    
+
     df_monthly_sora = prepare_sora_data(
          clean_sora_data(),
          "2019-12-31",
