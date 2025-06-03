@@ -58,31 +58,31 @@ def run_secondary():
     Runs secondary dataset pipeline jobs
     """
     df_monthly_population_growth_rates = prepare_population_data(
-        clean_population_data(), 
-        "2020", 
+        clean_population_data(),
+        "2020",
         "2025"
     )
     
     df_monthly_marriage_growth_rates = prepare_marriage_data(
         clean_marriage_data(),
-        "2020", 
+        "2020",
         "2025"
     )
 
-    df_monthly_cpi = prepare_cpi_data(clean_cpi_data(), 
-        "2019-12-01", 
+    df_monthly_cpi = prepare_cpi_data(clean_cpi_data(),
+        "2019-12-01",
         "2025-12-01"
     )
     
     df_monthly_sora = prepare_sora_data(
-         clean_sora_data(), 
-         "2019-12-31", 
+         clean_sora_data(),
+         "2019-12-31",
          "2025-12-01"
     )
 
     df_monthly_property_index = prepare_property_index_data(
         clean_property_index_data(),
-        "2019-12-01", 
+        "2019-12-01",
         "2025-04-01"
     )
 
@@ -91,6 +91,7 @@ def run_secondary():
             df_monthly_cpi,
             df_monthly_sora,
             df_monthly_property_index], "month", "2020-01-01", "2025-05-30")
+
 
 if __name__ == "__main__":
     import argparse
