@@ -4,7 +4,7 @@ Pipeline runner script.
 This module executes the data cleaning function and prepares the dataset
 for downstream unsupervised and supervised learning tasks.
 """
-
+import pandas as pd
 from src.clean_ura_data import clean_ura_data
 from src.find_nearest_train_stn import find_nearest_train_stn
 from src.clean_google_data import clean_google_data
@@ -49,9 +49,22 @@ def run_all(poi_type_list):
     df_nearest_mrt, df_nearest_lrt = find_nearest_train_stn()
     df_google_clean = clean_google_data(poi_type_list)
     df_google_nearest = find_nearby_google_poi(poi_type_list)
-    df_secondary = run_secondary()
 
-    # TO-DO: Left join secondary data to df_ura_clean
+    df_ecosocial = run_secondary()
+
+    df_clean['contract_month'] = pd.to_datetime(df_clean['contract_date_dt']).dt.to_period('M')
+    df_ecosocial['ecosocial_month'] = pd.to_datetime(df_ecosocial.index).to_period('M')
+    df_merged = pd.merge(
+        df_clean,
+        df_ecosocial.reset_index().assign(ecosocial_month=pd. \
+            to_datetime(df_ecosocial.index).to_period('M')),
+        left_on='contract_month',
+        right_on='ecosocial_month',
+        how='left'
+    )
+
+    df_merged.drop(columns=['contract_month', 'ecosocial_month'], inplace=True)
+    df_merged.to_csv("./src/data/output/clean_merged_ura_data.csv", index=False)
 
 def run_secondary():
     """
