@@ -4,7 +4,7 @@ Pipeline runner script.
 This module executes the data cleaning function and prepares the dataset
 for downstream unsupervised and supervised learning tasks.
 """
-import pandas as pd
+
 from src.clean_ura_data import clean_ura_data
 from src.find_nearest_train_stn import find_nearest_train_stn
 from src.clean_google_data import clean_google_data
@@ -30,6 +30,8 @@ from src.clean_prepare_property_index_data import (
     prepare_property_index_data
 )
 from src.utils.secondary_ds_helper_functions import concat_and_filter_by_date
+from src.merge_ura_ecosocial import merge_dataframes_pri_sec
+from src.normalize_sale_price import normalize_prices
 
 # pylint: disable=unused-variable
 
@@ -52,19 +54,10 @@ def run_all(poi_type_list):
 
     df_ecosocial = run_secondary()
 
-    df_clean['contract_month'] = pd.to_datetime(df_clean['contract_date_dt']).dt.to_period('M')
-    df_ecosocial['ecosocial_month'] = pd.to_datetime(df_ecosocial.index).to_period('M')
-    df_merged = pd.merge(
-        df_clean,
-        df_ecosocial.reset_index().assign(ecosocial_month=pd. \
-            to_datetime(df_ecosocial.index).to_period('M')),
-        left_on='contract_month',
-        right_on='ecosocial_month',
-        how='left'
-    )
+    df_merged = merge_dataframes_pri_sec(df_clean, df_ecosocial)
 
-    df_merged.drop(columns=['contract_month', 'ecosocial_month'], inplace=True)
-    df_merged.to_csv("./src/data/output/clean_merged_ura_data.csv", index=False)
+    df_normalized = normalize_prices(df_merged)
+
 
 def run_secondary():
     """
