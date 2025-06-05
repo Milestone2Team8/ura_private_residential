@@ -102,7 +102,9 @@ def clean_train_stn_lat_long(df_train_stn_lat_long):
     return df_clean_mrt, df_clean_lrt
 
 
-def find_nearest(df_property, df_amenity, df_property_cols, amenity_cols):
+def find_nearest(
+    df_property, df_amenity, df_property_cols, amenity_cols, distance_col
+):
     """
     Finds the nearest amenity (e.g., MRT or LRT station) for each property using
     geospatial joins.
@@ -143,7 +145,7 @@ def find_nearest(df_property, df_amenity, df_property_cols, amenity_cols):
         gdf_property,
         gdf_amenity,
         how="left",
-        distance_col="nearest_distance_m",
+        distance_col=distance_col,
     )
 
     df_nearest = df_nearest.drop(columns=["geometry", "index_right"])
@@ -184,12 +186,14 @@ def find_nearest_train_stn(
         df_mrt,
         ["longitude", "latitude"],
         ["mrt_longitude", "mrt_latitude"],
+        "mrt_nearest_distance_m",
     )
     df_nearest_lrt = find_nearest(
         df_condo,
         df_lrt,
         ["longitude", "latitude"],
         ["lrt_longitude", "lrt_latitude"],
+        "lrt_nearest_distance_m",
     )
 
     df_nearest_mrt.to_csv(output_mrt_stn_path, index=False)
