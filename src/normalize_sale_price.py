@@ -3,7 +3,6 @@ This module to normalize sale price for each transaction
 by removing cumulative cpi effect
 """
 
-from pathlib import Path
 import pandas as pd
 
 
