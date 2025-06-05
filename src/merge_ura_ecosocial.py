@@ -12,6 +12,8 @@ def merge_dataframes_pri_sec(df_ura : pd.DataFrame, df_ecos : pd.DataFrame):
     :type df_ura: pd.Dataframe
     :param df_ecos: dataframe to be processed
     :type df_ecos: pd.Dataframe
+    :return: merged dataframe
+    :rtype: pd.DataFrame
     """
     df_ura['contract_month'] = pd.to_datetime(df_ura['contract_date_dt']).dt.to_period('M')
     df_merged = pd.merge(

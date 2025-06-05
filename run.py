@@ -32,9 +32,9 @@ from src.clean_prepare_property_index_data import (
 from src.utils.secondary_ds_helper_functions import concat_and_filter_by_date
 from src.merge_ura_ecosocial import merge_dataframes_pri_sec
 from src.normalize_sale_price import normalize_prices
+from src.analysis.unsupervised_kmeans import perform_kmeans
 
 # pylint: disable=unused-variable
-
 
 def run_all(poi_type_list):
     """
@@ -58,6 +58,7 @@ def run_all(poi_type_list):
 
     df_normalized = normalize_prices(df_merged)
 
+    perform_kmeans(df_normalized)
 
 def run_secondary():
     """

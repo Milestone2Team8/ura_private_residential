@@ -11,3 +11,6 @@ shapely==2.0.6
 geopandas==1.0.1
 osmnx==2.0.3
 folium==0.19.6
+
+#Visualization Libraries
+matplotlib==3.4.3

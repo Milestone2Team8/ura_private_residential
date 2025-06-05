@@ -16,7 +16,7 @@ def normalize_prices(df_input: pd.DataFrame, output_path: Path = OUTPUT_NORMALIZ
     :type df_input: pd.Dataframe
     :param output_path: Path to the output normalized csv
     :type output_path: Path
-    :return: DataFrame with normalized transaction price
+    :return: dataFrame with normalized transaction price
     :rtype: pd.DataFrame
     """
 
