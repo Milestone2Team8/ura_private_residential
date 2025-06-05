@@ -6,9 +6,8 @@ by removing cumulative cpi effect
 from pathlib import Path
 import pandas as pd
 
-OUTPUT_NORMALIZED_PATH = Path("./src/data/output/clean_merged_ura_data.csv")
 
-def normalize_prices(df_input: pd.DataFrame, output_path: Path = OUTPUT_NORMALIZED_PATH):
+def normalize_prices(df_input: pd.DataFrame):
     """
     Process dataframe and normalize transaction prices using cumulative cpi.
 
@@ -32,6 +31,5 @@ def normalize_prices(df_input: pd.DataFrame, output_path: Path = OUTPUT_NORMALIZ
     df_input["target_price_cpi_adjusted"] = round(df_input["target_price"] \
         * 1 / df_input["cpi_accum"])
 
-    df_input.to_csv(output_path, index=False)
 
     return df_input

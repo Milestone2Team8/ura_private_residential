@@ -20,18 +20,19 @@ def perform_kmeans(df_input : pd.DataFrame):
     :return: updated dataframe after kmeans applied
     :rtype: pd.DataFrame
     """
-    df_input = df_input[df_input["noOfUnits"]
-    X = df_input[["target_price", "area" ]]
+    df_kmeans = df_input.copy()
+    df_kmeans = df_kmeans[df_kmeans["noOfUnits"] == 1]
+    X = df_kmeans[["target_price", "area" ]]
     #std_scaler = StandardScaler()
     #X_scaled = std_scaler.fit_transform(X)
 
     kmeans = KMeans(n_clusters=3, random_state=42)
-    df_input["cluster"] = kmeans.fit_predict(X)
+    df_kmeans["cluster"] = kmeans.fit_predict(X)
 
-    map_kmeans = [df_input["latitude"].mean(), df_input["longitude"].mean()]
+    map_kmeans = [df_kmeans["latitude"].mean(), df_kmeans["longitude"].mean()]
     m = folium.Map(location=map_kmeans, zoom_start=1)
 
-    for _, row in df_input.iterrows():
+    for _, row in df_kmeans.iterrows():
         folium.CircleMarker(
             location=(row["latitude"], row["longitude"]),
             radius=5,
@@ -42,6 +43,6 @@ def perform_kmeans(df_input : pd.DataFrame):
 
         ).add_to(m)
     
-    df_input.to_csv("./src/data/output/kmeans_Singapore.csv", index=False)
+    df_kmeans.to_csv("./src/data/output/kmeans_Singapore.csv", index=False)
 
     m.save("./src/data/output/kmeans_Singapore.html")

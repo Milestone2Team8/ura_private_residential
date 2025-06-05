@@ -103,12 +103,13 @@ def run_all(poi_type_list):
 
     df_normalized = normalize_prices(df_merged)
 
-    perform_kmeans(df_normalized)
     df_normalized.to_csv(
         "./src/data/output/clean_merged_ura_data.csv", index=False
     )
     validate_merge(df_pri, df_normalized, df_name="merged dataset")
 
+    #Unsupervised learning analysis
+    perform_kmeans(df_normalized)
 
 if __name__ == "__main__":
     import argparse
