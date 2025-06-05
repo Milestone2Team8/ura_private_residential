@@ -27,6 +27,7 @@ from src.merge_ura_amenities import merge_amenities_data
 from src.merge_ura_ecosocial import merge_ecosocial_data
 from src.normalize_sale_price import normalize_prices
 from src.utils.secondary_ds_helper_functions import concat_and_filter_by_date
+from src.utils.validate import validate_merge
 
 # pylint: disable=unused-variable
 
@@ -104,6 +105,7 @@ def run_all(poi_type_list):
     df_normalized.to_csv(
         "./src/data/output/clean_merged_ura_data.csv", index=False
     )
+    validate_merge(df_pri, df_normalized, df_name="merged dataset")
 
 
 if __name__ == "__main__":
