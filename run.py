@@ -28,6 +28,7 @@ from src.merge_ura_ecosocial import merge_ecosocial_data
 from src.normalize_sale_price import normalize_prices
 from src.utils.secondary_ds_helper_functions import concat_and_filter_by_date
 from src.utils.validate import validate_merge
+from src.analysis.unsupervised_kmeans import perform_kmeans
 
 # pylint: disable=unused-variable
 
@@ -107,6 +108,8 @@ def run_all(poi_type_list):
     )
     validate_merge(df_pri, df_normalized, df_name="merged dataset")
 
+    #Unsupervised learning analysis
+    perform_kmeans(df_normalized)
 
 if __name__ == "__main__":
     import argparse

@@ -13,6 +13,8 @@ def merge_ecosocial_data(df_ura: pd.DataFrame, df_ecos: pd.DataFrame):
     :type df_ura: pd.Dataframe
     :param df_ecos: secondary dataframe
     :type df_ecos: pd.Dataframe
+    :return: merged dataframe
+    :rtype: pd.DataFrame
     """
     rows_before = len(df_ura)
     df_ura = df_ura.copy()
