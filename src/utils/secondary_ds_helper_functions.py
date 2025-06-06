@@ -375,9 +375,8 @@ def distribute_quarterly_to_monthly_rate(
             if pd.isna(rate_pct) or pd.isna(end_val):
                 return []
 
-            r = (1 + rate_pct / 100) ** (1 / 3) - 1
+            r = (1 + rate_pct ) ** (1 / 3) - 1
             base = end_val / ((1 + r) ** 2)
-
             return [{
                 "month": (end - pd.DateOffset(months=2 - j) + pd.offsets.MonthEnd(0)),
                 "monthly_rate": round(r * 100, 6),
