@@ -29,6 +29,7 @@ from src.normalize_sale_price import normalize_prices
 from src.utils.secondary_ds_helper_functions import concat_and_filter_by_date
 from src.utils.validate import validate_merge
 from src.analysis.unsupervised_kmeans import perform_kmeans
+from src.analysis.tsne_visualize import generate_plot_tsne_clusters
 
 # pylint: disable=unused-variable
 
@@ -109,7 +110,8 @@ def run_all(poi_type_list):
     validate_merge(df_pri, df_normalized, df_name="merged dataset")
 
     #Unsupervised learning analysis
-    perform_kmeans(df_normalized)
+    df_kmeans, x_scaled = perform_kmeans(df_normalized)
+    generate_plot_tsne_clusters(df_kmeans, x_scaled)
 
 if __name__ == "__main__":
     import argparse
