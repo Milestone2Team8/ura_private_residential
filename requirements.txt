@@ -3,6 +3,8 @@ pandas==2.2.3
 python-dotenv==1.1.0
 requests==2.32.3
 scikit-learn==1.6.1
+pyod==2.0.5
+umap-learn==0.5.7
 xlrd==2.0.1
 
 

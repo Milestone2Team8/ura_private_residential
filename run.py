@@ -5,6 +5,8 @@ This module executes the data cleaning function and prepares the dataset
 for downstream unsupervised and supervised learning tasks.
 """
 
+from src.analysis.tsne_visualize import generate_plot_tsne_clusters
+from src.analysis.unsupervised_kmeans import perform_kmeans
 from src.clean_google_data import clean_google_data
 from src.clean_prepare_cpi_data import clean_cpi_data, prepare_cpi_data
 from src.clean_prepare_marriage_data import (
@@ -21,6 +23,7 @@ from src.clean_prepare_property_index_data import (
 )
 from src.clean_prepare_sora_data import clean_sora_data, prepare_sora_data
 from src.clean_ura_data import clean_ura_data
+from src.detect_outliers import detect_outliers_generate_plots
 from src.find_nearest_google_data import find_nearby_google_poi
 from src.find_nearest_train_stn import find_nearest_train_stn
 from src.merge_ura_amenities import merge_amenities_data
@@ -28,8 +31,6 @@ from src.merge_ura_ecosocial import merge_ecosocial_data
 from src.normalize_sale_price import normalize_prices
 from src.utils.secondary_ds_helper_functions import concat_and_filter_by_date
 from src.utils.validate import validate_merge
-from src.analysis.unsupervised_kmeans import perform_kmeans
-from src.analysis.tsne_visualize import generate_plot_tsne_clusters
 
 # pylint: disable=unused-variable
 
@@ -109,9 +110,11 @@ def run_all(poi_type_list):
     )
     validate_merge(df_pri, df_normalized, df_name="merged dataset")
 
-    #Unsupervised learning analysis
+    # Unsupervised learning analysis
     df_kmeans, x_scaled = perform_kmeans(df_normalized)
     generate_plot_tsne_clusters(df_kmeans, x_scaled)
+    detect_outliers_generate_plots(df_normalized)
+
 
 if __name__ == "__main__":
     import argparse
