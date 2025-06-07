@@ -7,8 +7,8 @@ and prepare data for analysis by handling datatypes and dropping
 unnecessary columns.
 """
 
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 import geopandas as gpd
 import pandas as pd
@@ -85,6 +85,28 @@ def compute_property_age(df_property):
     df_freehold["age_bin"] = "Freehold"
 
     return pd.concat([df_with_age, df_freehold], ignore_index=True)
+
+
+def compute_property_tenure(df_property):
+    """
+    Compute property tenure bin from the tenure column. The bin for 'Freehold' remains
+    as 'Freehold'.
+
+    :param df_property: DataFrame containing property data with a 'tenure' column
+    :type df_property: pd.DataFrame
+    :return: DataFrame with added 'tenure_bin' column.
+    :rtype: pd.DataFrame
+    """
+
+    df_property["tenure_bin"] = (
+        df_property["tenure"].str.split().str[0:2].str.join(" ")
+    )
+    df_with_tenure = df_property.dropna(subset=["tenure_bin"]).copy()
+
+    df_freehold = df_property[df_property["tenure_bin"].isnull()].copy()
+    df_freehold["tenure_bin"] = "Freehold"
+
+    return pd.concat([df_with_tenure, df_freehold], ignore_index=True)
 
 
 def convert_svy21_to_wgs84(df_property, x_col, y_col):
@@ -211,8 +233,9 @@ def clean_ura_data(
     # Drop rows with missing x, y coordinates
     df_processed = df_processed.dropna(subset=["x", "y"])
 
-    # Create property age bin
+    # Create property age tenure bin
     df_processed = compute_property_age(df_processed)
+    df_processed = compute_property_tenure(df_processed)
 
     # Convert x and y to lat long
     df_processed = convert_svy21_to_wgs84(df_processed, x_col="x", y_col="y")
@@ -231,7 +254,7 @@ def clean_ura_data(
     drop_cols = [
         "propertyType",  # all values are "Condominium"
         "contractDate",  # replaced by 'contract_date_dt'
-        "tenure",  # replaced by "age_bin"
+        "tenure",  # replaced by tenure_bin and age_bin
         "nettPrice",  # >99% missing
         "tenure_start",  # used to compute age
         "age",  # used to compute age_bin
