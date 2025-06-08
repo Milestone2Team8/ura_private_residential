@@ -79,12 +79,12 @@ def find_nearby_google_poi(
         geometry=gpd.points_from_xy(df_condo["longitude"], df_condo["latitude"]),
         crs="EPSG:4326"
     )
-    gdf_google = pd.read_pickle(input_google_path)
-
+    gdf_google = pd.read_pickle(input_google_path).dropna(subset=['types'])
     results = []
 
     for poi_type in poi_type_list:
         result = count_nearest(gdf_property, gdf_google, poi_type, radius = radius)
+        result = result.drop(columns="geometry")
         results.append(result)
 
     gdf_combined = pd.concat(results, axis=1)

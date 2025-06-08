@@ -1,40 +1,99 @@
-"""
-Cleans and combines raw POI data from multiple CSV files into a GeoDataFrame.
-"""
-
 from pathlib import Path
 from shapely.geometry import Point
 import pandas as pd
 import geopandas as gpd
+from datetime import datetime
+
+def extract_fetch_date(path):
+    """
+    Extracts the fetch date from a file path assuming the filename ends with a date 
+    in the format 'ddmmyy', e.g., 'raw_google_data_school_010124.csv'.
+
+    Args:
+        path (Path): A pathlib.Path object representing the file path.
+
+    Returns:
+        datetime.datetime or None: The extracted date if parsing succeeds, 
+        otherwise None.
+    """
+    try:
+        return datetime.strptime(path.stem.split('_')[-1], '%d%m%y')
+    except Exception:
+        return None
 
 def clean_google_data(poi_type_list):
     """
-    Loads and combines raw POI data from multiple CSV files based on a list of POI types.
-    Removes duplicate entries based on `place_id`, converts the cleaned DataFrame into a
-    GeoDataFrame, and saves it as a single pickle file.
+    Loads, processes, and combines raw Google POI data for given POI types.
+    
+    For each POI type, the function:
+    - Reads single or multiple dated CSV files.
+    - Computes the change in user ratings over time if multiple dated files are present.
+    - Adds metadata such as delta_rating_count, delta_time, and poi_type.
+    - Converts the combined DataFrame into a GeoDataFrame with point geometries.
+    - Saves the cleaned GeoDataFrame to a pickle file for reuse.
 
     Args:
-        poi_type_list (list of str): List of POI types (e.g., ['restaurant', 'school'])
+        poi_type_list (list of str): List of POI types to process (e.g., 
+        ['restaurant', 'school']).
 
     Returns:
-        geopandas.GeoDataFrame: Cleaned and stacked POI data with geometry.
+        geopandas.GeoDataFrame: Combined and cleaned POI data with 
+        geometry and calculated fields.
+
+    Raises:
+        ValueError: If no valid input files are found for any POI type.
     """
-    combined_df = []
+    combined_gdfs = []
 
     for poi_type in poi_type_list:
-        input_path = Path(f"src/data/input/raw_google_data_{poi_type}.csv")
-        if not input_path.exists():
-            print(f"Warning: File not found for POI type '{poi_type}': {input_path}")
+        input_files = sorted(Path("src/data/input").glob(
+            f"raw_google_data_{poi_type}_*.csv"))
+        base_file = Path(f"src/data/input/raw_google_data_{poi_type}.csv")
+
+        if not input_files and not base_file.exists():
+            print(f"Warning: No files found for POI type '{poi_type}'")
             continue
 
-        df = pd.read_csv(input_path)
-        df["poi_type"] = poi_type
-        combined_df.append(df)
+        if len(input_files) < 2:
+            if input_files:
+                df = pd.read_csv(input_files[0])
+            else:
+                df = pd.read_csv(base_file)
 
-    if not combined_df:
+            df["delta_rating_count"] = 0
+            df["delta_time"] = 0
+            df["poi_type"] = poi_type
+            combined_gdfs.append(df)
+            continue
+
+        files_with_dates = [(f, extract_fetch_date(f)) for f in input_files 
+                            if extract_fetch_date(f)]
+        files_with_dates = sorted(files_with_dates, key=lambda x: x[1])
+
+        min_file, min_date = files_with_dates[0]
+        max_file, max_date = files_with_dates[-1]
+
+        df_min = pd.read_csv(min_file).set_index("place_id")
+        df_max = pd.read_csv(max_file).set_index("place_id")
+
+        df_delta = df_max.copy()
+        df_delta = df_delta.join(df_min[["user_ratings_total"]], rsuffix="_min", 
+                                 how="left")
+
+        df_delta["delta_rating_count"] = (
+            df_delta["user_ratings_total"] - df_delta["user_ratings_total_min"]
+        ).fillna(0)
+
+        df_delta["delta_time"] = (max_date - min_date).days
+        df_delta["poi_type"] = poi_type
+        df_delta.reset_index(inplace=True)
+
+        combined_gdfs.append(df_delta)
+
+    if not combined_gdfs:
         raise ValueError("No valid input files found.")
 
-    df_all = pd.concat(combined_df, ignore_index=True)
+    df_all = pd.concat(combined_gdfs, ignore_index=True)
     df_all = df_all.drop_duplicates(subset="place_id")
 
     geometry = [Point(xy) for xy in zip(df_all['lng'], df_all['lat'])]

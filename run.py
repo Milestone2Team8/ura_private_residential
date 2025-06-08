@@ -162,7 +162,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--poi_type_list",
         nargs="+",
-        required=True,
+        default=["restaurant", "school", "hospital", "lodging", "police", "shopping_mall"],
         help="List of POI types to include (e.g., restaurant school pharmacy)",
     )
     args = parser.parse_args()

@@ -16,6 +16,7 @@ import folium
 import osmnx as ox
 from shapely.geometry import Point
 import geopandas as gpd
+from datetime import datetime
 
 def get_urban_polygons(place="Singapore"):
     """
@@ -202,21 +203,31 @@ def fetch_google_data(g_api_key, poi_type, radius=550,
         except requests.RequestException:
             error_points.append((lat, lng))
 
-    df = pd.DataFrame(all_results)[['place_id', 'name', 'business_status', 'geometry',
-                                    'price_level', 'user_ratings_total', 'rating',
-                                    'types', 'vicinity', 'permanently_closed'
-                                    ]]
+    df = pd.DataFrame(all_results)
+
+    expected_columns = [
+        'place_id', 'name', 'business_status', 'geometry',
+        'price_level', 'user_ratings_total', 'rating',
+        'types', 'vicinity', 'permanently_closed'
+    ]
+
+    df = df[[col for col in expected_columns if col in df.columns]]
+
     df['lat'] = df['geometry'].apply(lambda x: x['location']['lat'])
     df['lng'] = df['geometry'].apply(lambda x: x['location']['lng'])
 
-    with open(Path(f"./src/data/input/raw_google_data_{poi_type}.json"),
+    fetch_date = datetime.today().strftime('%d%m%y')
+
+    df['fetch_date'] = fetch_date
+
+    with open(Path(f"./src/data/input/raw_google_data_{poi_type}_{fetch_date}.json"),
                "w", encoding="utf-8") as f:
         json.dump(all_results, f, indent=4)
 
-    df.to_csv(Path(f"./src/data/input/raw_google_data_{poi_type}.csv"), index=False)
+    df.to_csv(Path(f"./src/data/input/raw_google_data_{poi_type}_{fetch_date}.csv"), index=False)
 
     plot_google_poi(gdf_urban, grid_points, df,
-                    Path(f"./src/data/plot/raw_google_data_{poi_type}.html"), radius)
+                    Path(f"./src/data/plot/raw_google_data_{poi_type}_{fetch_date}.html"), radius)
 
     return df, error_points
 
