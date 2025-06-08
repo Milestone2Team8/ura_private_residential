@@ -7,6 +7,7 @@ import os
 import time
 import json
 from pathlib import Path
+from datetime import datetime
 
 import requests
 from dotenv import load_dotenv
@@ -16,7 +17,6 @@ import folium
 import osmnx as ox
 from shapely.geometry import Point
 import geopandas as gpd
-from datetime import datetime
 
 def get_urban_polygons(place="Singapore"):
     """
@@ -183,7 +183,6 @@ def fetch_google_data(g_api_key, poi_type, radius=550,
     Returns:
         tuple:
             - pd.DataFrame: Cleaned POI results
-            - list: Error coordinates
     """
 
 #    gdf_urban = get_urban_polygons(place=place)
@@ -191,7 +190,6 @@ def fetch_google_data(g_api_key, poi_type, radius=550,
     grid_points = create_grid(urban_geom= gdf_urban.geometry.values[0], step=0.007)
 
     all_results = []
-    error_points = []
 
     for i, (lat, lng) in enumerate(grid_points):
         if i == 20 and test_run is True:
@@ -201,7 +199,7 @@ def fetch_google_data(g_api_key, poi_type, radius=550,
             results = g_nearby_search(g_api_key, lat, lng, radius, poi_type)
             all_results.extend(results)
         except requests.RequestException:
-            error_points.append((lat, lng))
+            pass
 
     df = pd.DataFrame(all_results)
 
@@ -229,7 +227,7 @@ def fetch_google_data(g_api_key, poi_type, radius=550,
     plot_google_poi(gdf_urban, grid_points, df,
                     Path(f"./src/data/plot/raw_google_data_{poi_type}_{fetch_date}.html"), radius)
 
-    return df, error_points
+    return df
 
 if __name__ == "__main__":
     import argparse

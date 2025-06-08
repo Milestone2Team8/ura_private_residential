@@ -1,8 +1,11 @@
+"""
+Cleans and combines raw POI data from multiple CSV files into a GeoDataFrame.
+"""
+from datetime import datetime
 from pathlib import Path
 from shapely.geometry import Point
 import pandas as pd
 import geopandas as gpd
-from datetime import datetime
 
 def extract_fetch_date(path):
     """
@@ -18,7 +21,7 @@ def extract_fetch_date(path):
     """
     try:
         return datetime.strptime(path.stem.split('_')[-1], '%d%m%y')
-    except Exception:
+    except ValueError:
         return None
 
 def clean_google_data(poi_type_list):
@@ -66,25 +69,22 @@ def clean_google_data(poi_type_list):
             combined_gdfs.append(df)
             continue
 
-        files_with_dates = [(f, extract_fetch_date(f)) for f in input_files 
+        files_with_dates = [(f, extract_fetch_date(f)) for f in input_files
                             if extract_fetch_date(f)]
         files_with_dates = sorted(files_with_dates, key=lambda x: x[1])
 
-        min_file, min_date = files_with_dates[0]
-        max_file, max_date = files_with_dates[-1]
-
-        df_min = pd.read_csv(min_file).set_index("place_id")
-        df_max = pd.read_csv(max_file).set_index("place_id")
+        df_min = pd.read_csv(files_with_dates[0][0]).set_index("place_id")
+        df_max = pd.read_csv(files_with_dates[-1][0]).set_index("place_id")
 
         df_delta = df_max.copy()
-        df_delta = df_delta.join(df_min[["user_ratings_total"]], rsuffix="_min", 
+        df_delta = df_delta.join(df_min[["user_ratings_total"]], rsuffix="_min",
                                  how="left")
 
         df_delta["delta_rating_count"] = (
             df_delta["user_ratings_total"] - df_delta["user_ratings_total_min"]
         ).fillna(0)
 
-        df_delta["delta_time"] = (max_date - min_date).days
+        df_delta["delta_time"] = (files_with_dates[-1][1] - files_with_dates[0][1]).days
         df_delta["poi_type"] = poi_type
         df_delta.reset_index(inplace=True)
 
