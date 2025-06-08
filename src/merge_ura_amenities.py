@@ -20,7 +20,14 @@ def merge_amenities_data(df_ura, df_amenities, poi_type_list):
     df_merged["longitude"] = df_merged["longitude"].round(8)
     df_merged["latitude"] = df_merged["latitude"].round(8)
 
+<<<<<<< HEAD
     amenities_cols = ["mrt_nearest_distance_m", "lrt_nearest_distance_m"] + [
+=======
+    amenities_cols = [
+        "mrt_nearest_distance_m",
+        "lrt_nearest_distance_m"
+    ] + [
+>>>>>>> 23e0a66 (fix merge_amenities_data())
         col
         for poi_type in poi_type_list
         for col in [
@@ -28,7 +35,11 @@ def merge_amenities_data(df_ura, df_amenities, poi_type_list):
             f"sum_user_ratings_{poi_type}",
             f"avg_rating_{poi_type}",
             f"avg_price_level_{poi_type}",
+<<<<<<< HEAD
             f"price_level_obs_count_{poi_type}",
+=======
+            f"price_level_obs_count_{poi_type}"
+>>>>>>> 23e0a66 (fix merge_amenities_data())
         ]
     ]
 

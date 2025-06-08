@@ -108,9 +108,13 @@ def run_all(poi_type_list):
     logger.info("---Merging Primary and Secondary Datasets\n")
 
     df_mrt, df_lrt, df_google = prepare_amenities_data(poi_type_list)
+<<<<<<< HEAD
     df_merged = merge_amenities_data(
         df_pri, [df_mrt, df_lrt, df_google], poi_type_list
     )
+=======
+    df_merged = merge_amenities_data(df_pri, [df_mrt, df_lrt, df_google], poi_type_list)
+>>>>>>> 23e0a66 (fix merge_amenities_data())
 
     df_econ = prepare_ecosocial_data()
     df_merged = merge_ecosocial_data(df_merged, df_econ)
