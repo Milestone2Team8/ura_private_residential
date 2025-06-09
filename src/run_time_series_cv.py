@@ -164,6 +164,8 @@ def run_time_series_cv(
     :return: Dictionary containing CV results, best model info, and metric used for selection
     :rtype: dict
     """
+    logger.info("Running supervised learning pipeline")
+
     if num_features is None:
         num_features = NUM_FEATURES
     if cat_features is None:
@@ -280,6 +282,8 @@ def run_time_series_cv(
                 "feature_importance": avg_importance,
             }
         )
+
+    logger.info(f"Completed model: {model_name}")
 
     for r in cv_results:
         logger.info(
