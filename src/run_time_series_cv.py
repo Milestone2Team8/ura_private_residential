@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 RANDOM_STATE = 42
+OUTPUT_PATH = Path("./src/data/output/cv_results.json")
 
 
 def build_regressors(random_state=RANDOM_STATE):
@@ -102,8 +103,13 @@ def get_model_feature_importance(pipeline, feature_names):
 
 
 def run_time_series_cv(
-    df_train, date_column, target_column, n_splits=5, best_metric_name="MAE"
-):  # pylint: disable=too-many-locals, too-many-statements
+    df_train,
+    date_column,
+    target_column,
+    n_splits=5,
+    best_metric_name="MAE",
+    output_path=OUTPUT_PATH,
+):  # pylint: disable=too-many-locals, too-many-statements, too-many-arguments, too-many-positional-arguments
     """
     Perform time series cross-validation for multiple regression models with preprocessing.
 
@@ -121,7 +127,7 @@ def run_time_series_cv(
     :return: Dictionary containing CV results, best model info, and metric used for selection
     :rtype: dict
     """
-    logger.info("Running supervised learning pipeline")
+    logger.info("---Running Supervised Learning Pipeline\n")
 
     configs = load_configs("features.yml")
     all_features = configs["all_features"]
@@ -246,7 +252,7 @@ def run_time_series_cv(
             }
         )
 
-        logger.info("Completed model: %s", model_name)
+        logger.info("Completed Model: %s", model_name)
 
     for r in cv_results:
         logger.info(
@@ -286,8 +292,6 @@ def run_time_series_cv(
         "best_model": best_result,
         "best_metric_name": best_metric_name,
     }
-
-    output_path = Path("./src/data/output/cv_results.json")
 
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(cv_results, f, indent=4)

@@ -39,3 +39,14 @@ all_features:
     - marketSegment
     - age_bin
     - tenure_bin
+
+# Selected features for outlier detection
+
+outliers_features:
+  num_features:
+  - area
+  - noOfUnits
+  - target_price
+
+  cat_features:
+  - marketSegment

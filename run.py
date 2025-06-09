@@ -105,7 +105,7 @@ def run_all(poi_type_list):
     # Prepare and merge primary with secondary data
     df_pri = clean_ura_data()
 
-    logger.info("Merging primary with secondary datasets\n")
+    logger.info("---Merging Primary and Secondary Datasets\n")
 
     df_mrt, df_lrt, df_google = prepare_amenities_data(poi_type_list)
     df_merged = merge_amenities_data(df_pri, [df_mrt, df_lrt, df_google])
@@ -118,7 +118,7 @@ def run_all(poi_type_list):
     df_normalized.to_csv(
         Path("./src/data/output/clean_merged_ura_data.csv"), index=False
     )
-    validate_merge(df_pri, df_normalized, df_name="merged dataset")
+    validate_merge(df_pri, df_normalized, df_name="Merged Dataset")
 
     # Unsupervised learning analysis
     df_kmeans, x_scaled = perform_kmeans(df_normalized)
@@ -126,12 +126,7 @@ def run_all(poi_type_list):
     detect_outliers_generate_plots(df_normalized)
 
     # Supervised learning analysis
-    df_single_trans = df_normalized[
-        (df_normalized["contract_date_dt"] >= "2022-05-01")
-        & (df_normalized["contract_date_dt"] <= "2025-05-01")
-        & (df_normalized["noOfUnits"] == 1)
-    ]
-
+    df_single_trans = df_normalized[df_normalized["noOfUnits"] == 1]
     df_train, df_test = split_time_series_train_test(df_single_trans)
     run_time_series_cv(df_train, "contract_date_dt", "target_price")
 
