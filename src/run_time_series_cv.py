@@ -11,7 +11,7 @@ from sklearn.base import clone
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.impute import SimpleImputer
-from sklearn.linear_model import Lasso, LinearRegression
+from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import ParameterGrid, TimeSeriesSplit
 from sklearn.pipeline import Pipeline
@@ -283,7 +283,7 @@ def run_time_series_cv(
             }
         )
 
-    logger.info(f"Completed model: {model_name}")
+        logger.info("Completed model: %s", model_name)
 
     for r in cv_results:
         logger.info(
