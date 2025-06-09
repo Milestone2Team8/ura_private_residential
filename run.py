@@ -5,6 +5,7 @@ This module executes the data cleaning function and prepares the dataset
 for downstream unsupervised and supervised learning tasks.
 """
 
+import logging
 from pathlib import Path
 
 from src.analysis.tsne_visualize import generate_plot_tsne_clusters
@@ -32,11 +33,12 @@ from src.merge_ura_amenities import merge_amenities_data
 from src.merge_ura_ecosocial import merge_ecosocial_data
 from src.normalize_sale_price import normalize_prices
 from src.run_time_series_cv import run_time_series_cv
-from src.utils.filter_data import filter_between_dates
 from src.utils.secondary_ds_helper_functions import concat_and_filter_by_date
 from src.utils.spilt_time_series_train_test import split_time_series_train_test
 from src.utils.validate import validate_merge
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 # pylint: disable=unused-variable
 
 
@@ -103,6 +105,8 @@ def run_all(poi_type_list):
     # Prepare and merge primary with secondary data
     df_pri = clean_ura_data()
 
+    logger.info("Merging primary with secondary datasets\n")
+
     df_mrt, df_lrt, df_google = prepare_amenities_data(poi_type_list)
     df_merged = merge_amenities_data(df_pri, [df_mrt, df_lrt, df_google])
 
@@ -117,19 +121,19 @@ def run_all(poi_type_list):
     validate_merge(df_pri, df_normalized, df_name="merged dataset")
 
     # Unsupervised learning analysis
-    df_kmeans, x_scaled = perform_kmeans(df_normalized)
-    generate_plot_tsne_clusters(df_kmeans, x_scaled)
+    # df_kmeans, x_scaled = perform_kmeans(df_normalized)
+    # generate_plot_tsne_clusters(df_kmeans, x_scaled)
     detect_outliers_generate_plots(df_normalized)
 
     # Supervised learning analysis
-    df_recent_years = filter_between_dates(
-        df_normalized, "contract_date_dt", "2022-05-01", "2025-05-01"
-    )
-    df_single_transactions = df_recent_years[df_recent_years["noOfUnits"] == 1]
-    df_train, df_test = split_time_series_train_test(df_single_transactions)
-    cv_results = run_time_series_cv(
-        df_train, "contract_date_dt", "target_price"
-    )
+    df_single_trans = df_normalized[
+        (df_normalized["contract_date_dt"] >= "2022-05-01")
+        & (df_normalized["contract_date_dt"] <= "2025-05-01")
+        & (df_normalized["noOfUnits"] == 1)
+    ]
+
+    df_train, df_test = split_time_series_train_test(df_single_trans)
+    run_time_series_cv(df_train, "contract_date_dt", "target_price")
 
     # TO-DO
     # Please see the “Tips for Project Report” video under “Week 6 Project Check-in”

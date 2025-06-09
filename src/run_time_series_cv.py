@@ -4,6 +4,7 @@ Performs time series cross validation to find the best regressor model.
 
 import json
 import logging
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -18,41 +19,13 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from sklearn.svm import SVR
 
+from src.utils.load_configs import load_configs
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# pylint: disable=too-many-locals
-# pylint: disable=too-many-arguments
-# pylint: disable=too-many-positional-arguments
-# pylint: disable=too-many-statements
-# pylint: disable=too-many-branches
 
 RANDOM_STATE = 42
-NUM_FEATURES = [
-    "area",
-    "days_since_1st_trans",
-    "mrt_nearest_distance_m",
-    "lrt_nearest_distance_m",
-    "poi_count_restaurant",
-    "sum_user_ratings_restaurant",
-    "avg_rating_restaurant",
-    "avg_price_level_restaurant",
-    "price_level_obs_count_restaurant",
-    "monthly_population_growth_rate",
-    "monthly_marriage_crude_rate",
-    "SORA",
-    "cpi_accum",
-    "monthly_price_index",
-]
-CAT_FEATURES = [
-    "floorRange",
-    "typeOfSale",
-    "typeOfArea",
-    "district",
-    "marketSegment",
-    "age_bin",
-    "tenure_bin",
-]
 
 
 def build_regressors(random_state=RANDOM_STATE):
@@ -129,16 +102,8 @@ def get_model_feature_importance(pipeline, feature_names):
 
 
 def run_time_series_cv(
-    df_train,
-    date_column,
-    target_column,
-    regressors=None,
-    num_features=None,
-    cat_features=None,
-    n_splits=5,
-    best_metric_name="MAE",
-    output_path="./src/data/output/cv_results.json",
-):
+    df_train, date_column, target_column, n_splits=5, best_metric_name="MAE"
+):  # pylint: disable=too-many-locals, too-many-statements
     """
     Perform time series cross-validation for multiple regression models with preprocessing.
 
@@ -148,30 +113,28 @@ def run_time_series_cv(
     :type date_column: str
     :param target_column: Column name of the target variable to predict
     :type target_column: str
-    :param regressors: List of tuples with model name and untrained regressor instance
-    :type regressors: list[tuple[str, object]]
-    :param num_features: List of numeric feature column names to standardize
-    :type num_features: list[str]
-    :param cat_features: List of categorical feature column names to one-hot encode
-    :type cat_features: list[str]
     :param n_splits: Number of splits/folds for TimeSeriesSplit cross-validation, defaults to 5
     :type n_splits: int, optional
     :param best_metric_name: Metric name to select best model ('MAE' minimized, 'R2' maximized),
                             defaults to 'MAE'
     :type best_metric_name: str, optional
-    :param output_path: File path to save the CV results as JSON.
-    :type output_path: str, optional
     :return: Dictionary containing CV results, best model info, and metric used for selection
     :rtype: dict
     """
     logger.info("Running supervised learning pipeline")
 
-    if num_features is None:
-        num_features = NUM_FEATURES
-    if cat_features is None:
-        cat_features = CAT_FEATURES
-    if regressors is None:
-        regressors = build_regressors()
+    configs = load_configs("features.yml")
+    all_features = configs["all_features"]
+
+    num_features = (
+        all_features["num_primary"]
+        + all_features["num_amenities"]
+        + all_features["num_ecosocial"]
+    )
+
+    cat_features = all_features["cat_primary"]
+
+    regressors = build_regressors()
 
     df_sorted = df_train.sort_values(date_column).copy()
     x_all = df_sorted.drop(columns=[target_column])
@@ -323,6 +286,8 @@ def run_time_series_cv(
         "best_model": best_result,
         "best_metric_name": best_metric_name,
     }
+
+    output_path = Path("./src/data/output/cv_results.json")
 
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(cv_results, f, indent=4)
