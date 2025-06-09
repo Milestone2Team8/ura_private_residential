@@ -7,6 +7,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# pylint: disable=duplicate-code
+
 
 def diagnose_missing_data(df_ura, df_name="DataFrame"):
     """Tabulates the number and percentage of missing values in the data."""
