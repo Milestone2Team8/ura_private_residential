@@ -121,8 +121,8 @@ def run_all(poi_type_list):
     validate_merge(df_pri, df_normalized, df_name="merged dataset")
 
     # Unsupervised learning analysis
-    # df_kmeans, x_scaled = perform_kmeans(df_normalized)
-    # generate_plot_tsne_clusters(df_kmeans, x_scaled)
+    df_kmeans, x_scaled = perform_kmeans(df_normalized)
+    generate_plot_tsne_clusters(df_kmeans, x_scaled)
     detect_outliers_generate_plots(df_normalized)
 
     # Supervised learning analysis
