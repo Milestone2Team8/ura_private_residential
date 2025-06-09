@@ -112,14 +112,14 @@ def run_all(poi_type_list):
     df_normalized = normalize_prices(df_merged)
 
     df_normalized.to_csv(
-        "./src/data/output/clean_merged_ura_data.csv", index=False
+        Path("./src/data/output/clean_merged_ura_data.csv"), index=False
     )
     validate_merge(df_pri, df_normalized, df_name="merged dataset")
 
     # Unsupervised learning analysis
-    # df_kmeans, x_scaled = perform_kmeans(df_normalized)
-    # generate_plot_tsne_clusters(df_kmeans, x_scaled)
-    # detect_outliers_generate_plots(df_normalized)
+    df_kmeans, x_scaled = perform_kmeans(df_normalized)
+    generate_plot_tsne_clusters(df_kmeans, x_scaled)
+    detect_outliers_generate_plots(df_normalized)
 
     # Supervised learning analysis
     df_recent_years = filter_between_dates(
