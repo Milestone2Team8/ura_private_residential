@@ -127,7 +127,7 @@ def run_time_series_cv(
     :return: Dictionary containing CV results, best model info, and metric used for selection
     :rtype: dict
     """
-    logger.info("Running supervised learning pipeline")
+    logger.info("---Running Supervised Learning Pipeline\n")
 
     configs = load_configs("features.yml")
     all_features = configs["all_features"]
@@ -252,7 +252,7 @@ def run_time_series_cv(
             }
         )
 
-        logger.info("Completed model: %s", model_name)
+        logger.info("Completed Model: %s", model_name)
 
     for r in cv_results:
         logger.info(

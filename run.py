@@ -105,7 +105,7 @@ def run_all(poi_type_list):
     # Prepare and merge primary with secondary data
     df_pri = clean_ura_data()
 
-    logger.info("Merging primary with secondary datasets\n")
+    logger.info("---Merging Primary and Secondary Datasets\n")
 
     df_mrt, df_lrt, df_google = prepare_amenities_data(poi_type_list)
     df_merged = merge_amenities_data(df_pri, [df_mrt, df_lrt, df_google])
@@ -118,7 +118,7 @@ def run_all(poi_type_list):
     df_normalized.to_csv(
         Path("./src/data/output/clean_merged_ura_data.csv"), index=False
     )
-    validate_merge(df_pri, df_normalized, df_name="merged dataset")
+    validate_merge(df_pri, df_normalized, df_name="Merged Dataset")
 
     # Unsupervised learning analysis
     df_kmeans, x_scaled = perform_kmeans(df_normalized)

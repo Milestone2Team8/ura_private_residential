@@ -18,9 +18,9 @@ def diagnose_missing_data(df_ura, df_name="DataFrame"):
     missing_table = missing_table[missing_table["missing_count"] > 0]
 
     if not missing_table.empty:
-        logger.info("Missing values in %s\n%s\n", df_name, missing_table)
+        logger.info("Missing Values in %s\n%s\n", df_name, missing_table)
     else:
-        logger.info("No missing values in %s.\n", df_name)
+        logger.info("No Missing Values in %s.\n", df_name)
 
     return missing_table
 
@@ -34,7 +34,7 @@ def validate_merge(df_ura, df_merged, df_name="DataFrame"):
     rows_after = len(df_merged)
 
     logger.info(
-        "Completed merging primary and secondary datasets\n"
+        "Completed Merging Datasets\n"
         "Number of rows before merge: %s\n"
         "Number of rows after merge: %s\n",
         rows_before,
