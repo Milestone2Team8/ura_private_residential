@@ -19,7 +19,6 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from src.utils.custom_distance_metric import gower_distances
 from src.utils.load_configs import load_configs
-from src.utils.validate import diagnose_missing_data
 
 RANDOM_STATE = 42
 OUTPUT_PATH = Path("./src/data/output/clean_merged_outliers.csv")

@@ -109,7 +109,7 @@ def run_time_series_cv(
     n_splits=5,
     best_metric_name="MAE",
     output_path=OUTPUT_PATH,
-):  # pylint: disable=too-many-locals, too-many-statements
+):  # pylint: disable=too-many-locals, too-many-statements, too-many-arguments, too-many-positional-arguments
     """
     Perform time series cross-validation for multiple regression models with preprocessing.
 
