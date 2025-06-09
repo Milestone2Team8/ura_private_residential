@@ -223,6 +223,12 @@ def clean_ura_data(
         new_col="contract_date_dt",
     )
 
+    # Get most recent three years
+    df_processed = df_processed[
+        (df_processed["contract_date_dt"] >= "2022-05-01")
+        & (df_processed["contract_date_dt"] <= "2025-05-01")
+    ]
+
     # Compute days since first transaction
     df_processed = compute_days_since_1st_trans(df_processed)
 

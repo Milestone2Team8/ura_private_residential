@@ -126,12 +126,7 @@ def run_all(poi_type_list):
     detect_outliers_generate_plots(df_normalized)
 
     # Supervised learning analysis
-    df_single_trans = df_normalized[
-        (df_normalized["contract_date_dt"] >= "2022-05-01")
-        & (df_normalized["contract_date_dt"] <= "2025-05-01")
-        & (df_normalized["noOfUnits"] == 1)
-    ]
-
+    df_single_trans = df_normalized[df_normalized["noOfUnits"] == 1]
     df_train, df_test = split_time_series_train_test(df_single_trans)
     run_time_series_cv(df_train, "contract_date_dt", "target_price")
 
