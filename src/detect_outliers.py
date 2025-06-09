@@ -95,7 +95,7 @@ def process_outliers_data(
     pipeline = Pipeline(steps=[("preprocessor", preprocessor)])
 
     logger.info(
-        "Processing data for outlier detection:\n"
+        "Processing data for outlier detection\n"
         "Numerical features: %s\n"
         "Categorical features: %s\n",
         num_features,
@@ -169,7 +169,7 @@ def plot_outliers_umap(
     """
     warnings.filterwarnings("ignore")
     logger.info(
-        "\nPlotting 2D UMAP using sample data and label column: %s\n",
+        "\nPlotting 2D UMAP using sample data and label column %s\n",
         label_col,
     )
 
@@ -181,7 +181,7 @@ def plot_outliers_umap(
     )
 
     if gower:
-        logger.info("\nComputing gower distance matrix for UMAP.")
+        logger.info("\nComputing gower distance matrix for UMAP")
         x_processed = gower_distances(x_processed, cat_features=is_cat)
         metric = "precomputed"
     else:
@@ -256,7 +256,7 @@ def detect_outliers_generate_plots(df_ura, detectors=None):
     df_copy = df_ura.copy()
     n_detectors = len(detectors)
 
-    logger.info("Running Outlier Detection:\n")
+    logger.info("Running Outlier Detection\n")
     x_processed, _ = process_outliers_data(
         df_copy,
         cat_imputer_strategy=CAT_IMPUTER_STRATEGY,
@@ -269,7 +269,7 @@ def detect_outliers_generate_plots(df_ura, detectors=None):
 
     for i, (_, detector) in enumerate(detectors.items()):
 
-        logger.info("Running Detector %d.\n%s\n", i, detector)
+        logger.info("Running Detector %d\n%s\n", i, detector)
         detector.fit(x_processed)
         outlier_scores[:, i] = detector.decision_scores_
         labels[:, i] = detector.labels_

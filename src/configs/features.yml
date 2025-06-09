@@ -1,0 +1,41 @@
+# All prepared primary and secondary features for merging and model cross-validation
+
+# The following features are excluded for model k-fold cross-validation:
+# - NoofUnits: model predicts single-unit sales only.
+# - propertyType, all values are "Condominium"
+# - contractDate, replaced by 'contract_date_dt'
+# - tenure:  replaced by tenure_bin and age_bin
+# - nettPrice: >99% of the values are missing
+# - x and longitude: intermediate features
+# - y and latitude: intermediate features
+# - date_index, month,cpi: intermediate features
+
+all_features:
+  num_primary:
+    - area
+    - days_since_1st_trans
+
+  num_amenities:
+    - mrt_nearest_distance_m
+    - lrt_nearest_distance_m
+    - poi_count_restaurant
+    - sum_user_ratings_restaurant
+    - avg_rating_restaurant
+    - avg_price_level_restaurant
+    - price_level_obs_count_restaurant
+
+  num_ecosocial:
+    - monthly_population_growth_rate
+    - monthly_marriage_crude_rate
+    - SORA
+    - cpi_accum
+    - monthly_price_index
+
+  cat_primary:
+    - floorRange
+    - typeOfSale
+    - typeOfArea
+    - district
+    - marketSegment
+    - age_bin
+    - tenure_bin
