@@ -4,10 +4,8 @@ This module merges 2 datasets (ura, amenities) using latitude and longitude.
 
 import pandas as pd
 
-from src.utils.load_configs import load_configs
 
-
-def merge_amenities_data(df_ura, df_amenities):
+def merge_amenities_data(df_ura, df_amenities, poi_type_list):
     """
     Merges ura and amenities datasets.
 
@@ -22,8 +20,17 @@ def merge_amenities_data(df_ura, df_amenities):
     df_merged["longitude"] = df_merged["longitude"].round(8)
     df_merged["latitude"] = df_merged["latitude"].round(8)
 
-    configs = load_configs("features.yml")
-    amenities_cols = configs["all_features"]["num_amenities"]
+    amenities_cols = ["mrt_nearest_distance_m", "lrt_nearest_distance_m"] + [
+        col
+        for poi_type in poi_type_list
+        for col in [
+            f"poi_count_{poi_type}",
+            f"sum_user_ratings_{poi_type}",
+            f"avg_rating_{poi_type}",
+            f"avg_price_level_{poi_type}",
+            f"price_level_obs_count_{poi_type}",
+        ]
+    ]
 
     for df_amenity in df_amenities:
         cols_to_keep = ["longitude", "latitude"] + [

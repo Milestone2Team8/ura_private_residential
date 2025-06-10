@@ -108,7 +108,9 @@ def run_all(poi_type_list):
     logger.info("---Merging Primary and Secondary Datasets\n")
 
     df_mrt, df_lrt, df_google = prepare_amenities_data(poi_type_list)
-    df_merged = merge_amenities_data(df_pri, [df_mrt, df_lrt, df_google])
+    df_merged = merge_amenities_data(
+        df_pri, [df_mrt, df_lrt, df_google], poi_type_list
+    )
 
     df_econ = prepare_ecosocial_data()
     df_merged = merge_ecosocial_data(df_merged, df_econ)
@@ -120,12 +122,12 @@ def run_all(poi_type_list):
     )
     validate_merge(df_pri, df_normalized, df_name="Merged Dataset")
 
-    # Unsupervised learning analysis
-    df_kmeans, x_scaled = perform_kmeans(df_normalized)
-    generate_plot_tsne_clusters(df_kmeans, x_scaled)
+    # # Unsupervised learning analysis
+    # df_kmeans, x_scaled = perform_kmeans(df_normalized)
+    # generate_plot_tsne_clusters(df_kmeans, x_scaled)
     detect_outliers_generate_plots(df_normalized)
 
-    # Supervised learning analysis
+    # # Supervised learning analysis
     df_single_trans = df_normalized[df_normalized["noOfUnits"] == 1]
     df_train, df_test = split_time_series_train_test(df_single_trans)
     run_time_series_cv(df_train, "contract_date_dt", "target_price")
