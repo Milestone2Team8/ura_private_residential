@@ -1,16 +1,5 @@
-# All prepared primary and secondary features for merging and model cross-validation
-
-# The following features are excluded for model k-fold cross-validation:
-# - NoofUnits: model predicts single-unit sales only.
-# - propertyType, all values are "Condominium"
-# - contractDate, replaced by 'contract_date_dt'
-# - tenure:  replaced by tenure_bin and age_bin
-# - nettPrice: >99% of the values are missing
-# - x and longitude: intermediate features
-# - y and latitude: intermediate features
-# - date_index, month,cpi: intermediate features
-
-all_features:
+# Features for model cross-validation
+cv_features:
   num_primary:
     - area
     - days_since_1st_trans
@@ -40,8 +29,7 @@ all_features:
     - age_bin
     - tenure_bin
 
-# Selected features for outlier detection
-
+# Features for outlier detection
 outliers_features:
   num_features:
   - area

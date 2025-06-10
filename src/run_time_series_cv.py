@@ -127,18 +127,21 @@ def run_time_series_cv(
     :return: Dictionary containing CV results, best model info, and metric used for selection
     :rtype: dict
     """
-    logger.info("---Running Supervised Learning Pipeline\n")
+    logger.info("---Running Supervised Learning Cross-Validation\n")
 
     configs = load_configs("features.yml")
-    all_features = configs["all_features"]
+    cv_features = configs["cv_features"]
 
     num_features = (
-        all_features["num_primary"]
-        + all_features["num_amenities"]
-        + all_features["num_ecosocial"]
+        cv_features["num_primary"]
+        + cv_features["num_amenities"]
+        + cv_features["num_ecosocial"]
     )
 
-    cat_features = all_features["cat_primary"]
+    cat_features = cv_features["cat_primary"]
+
+    num_features = [col for col in num_features if col in df_train.columns]
+    cat_features = [col for col in cat_features if col in df_train.columns]
 
     regressors = build_regressors()
 
