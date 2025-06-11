@@ -7,6 +7,7 @@ import os
 import time
 import json
 from pathlib import Path
+from datetime import datetime
 
 import requests
 from dotenv import load_dotenv
@@ -182,7 +183,6 @@ def fetch_google_data(g_api_key, poi_type, radius=550,
     Returns:
         tuple:
             - pd.DataFrame: Cleaned POI results
-            - list: Error coordinates
     """
 
 #    gdf_urban = get_urban_polygons(place=place)
@@ -190,7 +190,6 @@ def fetch_google_data(g_api_key, poi_type, radius=550,
     grid_points = create_grid(urban_geom= gdf_urban.geometry.values[0], step=0.007)
 
     all_results = []
-    error_points = []
 
     for i, (lat, lng) in enumerate(grid_points):
         if i == 20 and test_run is True:
@@ -200,25 +199,35 @@ def fetch_google_data(g_api_key, poi_type, radius=550,
             results = g_nearby_search(g_api_key, lat, lng, radius, poi_type)
             all_results.extend(results)
         except requests.RequestException:
-            error_points.append((lat, lng))
+            pass
 
-    df = pd.DataFrame(all_results)[['place_id', 'name', 'business_status', 'geometry',
-                                    'price_level', 'user_ratings_total', 'rating',
-                                    'types', 'vicinity', 'permanently_closed'
-                                    ]]
+    df = pd.DataFrame(all_results)
+
+    expected_columns = [
+        'place_id', 'name', 'business_status', 'geometry',
+        'price_level', 'user_ratings_total', 'rating',
+        'types', 'vicinity', 'permanently_closed'
+    ]
+
+    df = df[[col for col in expected_columns if col in df.columns]]
+
     df['lat'] = df['geometry'].apply(lambda x: x['location']['lat'])
     df['lng'] = df['geometry'].apply(lambda x: x['location']['lng'])
 
-    with open(Path(f"./src/data/input/raw_google_data_{poi_type}.json"),
+    fetch_date = datetime.today().strftime('%d%m%y')
+
+    df['fetch_date'] = fetch_date
+
+    with open(Path(f"./src/data/input/raw_google_data_{poi_type}_{fetch_date}.json"),
                "w", encoding="utf-8") as f:
         json.dump(all_results, f, indent=4)
 
-    df.to_csv(Path(f"./src/data/input/raw_google_data_{poi_type}.csv"), index=False)
+    df.to_csv(Path(f"./src/data/input/raw_google_data_{poi_type}_{fetch_date}.csv"), index=False)
 
     plot_google_poi(gdf_urban, grid_points, df,
-                    Path(f"./src/data/plot/raw_google_data_{poi_type}.html"), radius)
+                    Path(f"./src/data/plot/raw_google_data_{poi_type}_{fetch_date}.html"), radius)
 
-    return df, error_points
+    return df
 
 if __name__ == "__main__":
     import argparse

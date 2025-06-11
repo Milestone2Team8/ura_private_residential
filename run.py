@@ -108,9 +108,7 @@ def run_all(poi_type_list):
     logger.info("---Merging Primary and Secondary Datasets\n")
 
     df_mrt, df_lrt, df_google = prepare_amenities_data(poi_type_list)
-    df_merged = merge_amenities_data(
-        df_pri, [df_mrt, df_lrt, df_google], poi_type_list
-    )
+    df_merged = merge_amenities_data(df_pri, [df_mrt, df_lrt, df_google], poi_type_list)
 
     df_econ = prepare_ecosocial_data()
     df_merged = merge_ecosocial_data(df_merged, df_econ)
@@ -162,7 +160,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--poi_type_list",
         nargs="+",
-        required=True,
+        default=["restaurant", "school", "hospital", "lodging", "police", "shopping_mall"],
         help="List of POI types to include (e.g., restaurant school pharmacy)",
     )
     args = parser.parse_args()

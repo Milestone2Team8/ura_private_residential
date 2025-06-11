@@ -7,6 +7,7 @@ pyod==2.0.5
 pyyaml==6.0.2  
 umap-learn==0.5.7
 xlrd==2.0.1
+torch==2.7.1
 
 
 # Geospatial Libraries
