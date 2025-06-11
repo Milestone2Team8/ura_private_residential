@@ -109,7 +109,7 @@ def run_time_series_cv(
     n_splits=5,
     best_metric_name="MAE",
     output_path=OUTPUT_PATH,
-):  # pylint: disable=too-many-locals, too-many-statements, too-many-arguments, too-many-positional-arguments
+):  # pylint: disable=too-many-locals, too-many-statements, too-many-arguments, too-many-positional-arguments, too-many-branches
     """
     Perform time series cross-validation for multiple regression models with preprocessing.
 
@@ -124,8 +124,8 @@ def run_time_series_cv(
     :param best_metric_name: Metric name to select best model ('MAE' minimized, 'R2' maximized),
                             defaults to 'MAE'
     :type best_metric_name: str, optional
-    :return: Dictionary containing CV results, best model info, and metric used for selection
-    :rtype: dict
+    :return: The best fitted sklearn Pipeline
+    :rtype: sklearn.pipeline.Pipeline
     """
     logger.info("---Running Supervised Learning Cross-Validation\n")
 
@@ -160,42 +160,46 @@ def run_time_series_cv(
     tscv = TimeSeriesSplit(n_splits=n_splits)
     cv_results = []
 
+    preprocessor = ColumnTransformer(
+        transformers=[
+            (
+                "num",
+                Pipeline(
+                    [
+                        ("imputer", SimpleImputer(strategy="mean")),
+                        ("scaler", MinMaxScaler()),
+                    ]
+                ),
+                num_features,
+            ),
+            (
+                "cat",
+                Pipeline(
+                    [
+                        (
+                            "imputer",
+                            SimpleImputer(
+                                strategy="constant", fill_value="missing"
+                            ),
+                        ),
+                        (
+                            "onehot",
+                            OneHotEncoder(
+                                handle_unknown="ignore",
+                                sparse_output=False,
+                            ),
+                        ),
+                    ]
+                ),
+                cat_features,
+            ),
+        ]
+    )
+
+    best_pipeline = None
+    best_score = None
+
     for model_name, regressor in regressors:
-        preprocessor = ColumnTransformer(
-            transformers=[
-                (
-                    "num",
-                    Pipeline(
-                        [
-                            ("imputer", SimpleImputer(strategy="mean")),
-                            ("scaler", MinMaxScaler()),
-                        ]
-                    ),
-                    num_features,
-                ),
-                (
-                    "cat",
-                    Pipeline(
-                        [
-                            (
-                                "imputer",
-                                SimpleImputer(
-                                    strategy="constant", fill_value="missing"
-                                ),
-                            ),
-                            (
-                                "onehot",
-                                OneHotEncoder(
-                                    handle_unknown="ignore",
-                                    sparse_output=False,
-                                ),
-                            ),
-                        ]
-                    ),
-                    cat_features,
-                ),
-            ]
-        )
         fold_metrics = []
         importances_all_folds = []
 
@@ -237,6 +241,16 @@ def run_time_series_cv(
             for k in fold_metrics[0]
         }
         all_metrics = {**avg_metrics, **std_metrics}
+
+        current_metric = avg_metrics[best_metric_name]
+        if best_score is None or (
+            (best_metric_name == "R2" and current_metric > best_score)
+            or (best_metric_name != "R2" and current_metric < best_score)
+        ):
+            best_score = current_metric
+            best_pipeline = Pipeline(
+                [("preprocessing", preprocessor), ("model", clone(regressor))]
+            )
 
         # Aggregate importances
         if importances_all_folds:
@@ -299,4 +313,4 @@ def run_time_series_cv(
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(cv_results, f, indent=4)
 
-    return cv_results
+    return best_pipeline
