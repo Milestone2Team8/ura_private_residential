@@ -108,7 +108,9 @@ def run_all(poi_type_list):
     logger.info("---Merging Primary and Secondary Datasets\n")
 
     df_mrt, df_lrt, df_google = prepare_amenities_data(poi_type_list)
-    df_merged = merge_amenities_data(df_pri, [df_mrt, df_lrt, df_google], poi_type_list)
+    df_merged = merge_amenities_data(
+        df_pri, [df_mrt, df_lrt, df_google], poi_type_list
+    )
 
     df_econ = prepare_ecosocial_data()
     df_merged = merge_ecosocial_data(df_merged, df_econ)
@@ -128,29 +130,32 @@ def run_all(poi_type_list):
     # Supervised learning analysis
     df_single_trans = df_normalized[df_normalized["noOfUnits"] == 1]
     df_train, df_test = split_time_series_train_test(df_single_trans)
-    run_time_series_cv(df_train, "contract_date_dt", "target_price")
+    best_model_pipeline = run_time_series_cv(
+        df_train, "contract_date_dt", "target_price"
+    )
 
     # TO-DO
     # Please see the “Tips for Project Report” video under “Week 6 Project Check-in”
 
     # (6 points) Do a feature importance and ablation analysis on your best model to
     # get insight into which features are or are not contributing to prediction success/failure.
-    # Jerome: Using the best model settings saved under .\data\output\csv_results.json, test
-    # re-run the model using df_train and df_test using different feature sets (e.g. primary data,
-    # amenities data and econ data)
+    # Jerome: The best_model_pipeline can be used to perform .fit on df_train and .predict on
+    # test. to experiment with the different feature sets (e.g. primary data, amenities data
+    # and econ data).
 
     # (4 points) Do at least one sensitivity analysis on your best model: How sensitive are your
     # results to choice of (hyper-)parameters, features, or other varying solution elements?
     # Jerome: Using the best model settings saved under .\data\output\csv_results.json, choose one
     # hyperparameter to analysis and plot the validation curve. See video under Supervised Learning
-    # Week 2 - Cross Validation 6:58 min on how to plot the curve.
+    # Week 2 - Cross Validation 6:58 min on how to plot the curve. Note: The best_model_pipeline
+    # cannot be reused directly because hyperparameter experimentation is still needed.
 
     # Failure analysis (5 points)
     # Select at least 3 *specific* examples (records) where prediction failed, and analyze
     # possible reasons why.
     # Ideally you should be able to identify at least three different categories of failure.
     # What future improvements might fix the failures?
-    # Jerome: Predict df_test using the best model and conduct analysis.
+    # Jerome: Predict df_test using the best_model_pipeline and conduct analysis.
 
 
 if __name__ == "__main__":
@@ -160,7 +165,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "--poi_type_list",
         nargs="+",
-        default=["restaurant", "school", "hospital", "lodging", "police", "shopping_mall"],
+        default=[
+            "restaurant",
+            "school",
+            "hospital",
+            "lodging",
+            "police",
+            "shopping_mall",
+        ],
         help="List of POI types to include (e.g., restaurant school pharmacy)",
     )
     args = parser.parse_args()
