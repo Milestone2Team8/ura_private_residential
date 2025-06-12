@@ -21,8 +21,9 @@ def perform_kmeans(df_input : pd.DataFrame):
 
     :param df_input: dataframe to be processed
     :type df_input: pd.Dataframe
-    :return: Tuple of updated DataFrame with cluster labels and scaled feature matrix
-    :rtype: Tuple[pd.DataFrame, np.ndarray]
+    :return: Tuple of updated DataFrame with cluster labels, scaled feature matrix
+    and best no of clusters
+    :rtype: Tuple[pd.DataFrame, np.ndarray, int]
     """
 
     cluster_colors = {
@@ -37,14 +38,14 @@ def perform_kmeans(df_input : pd.DataFrame):
     }
     logger.info("Unsupervised Learning Step 1:Generating elbow chart for kmeans.")
     df_kmeans = df_input.copy()
-    
+
     df_kmeans = df_kmeans[df_kmeans["noOfUnits"] == 1]
     df_kmeans['tenure_bin'] = df_kmeans['tenure_bin'].replace('Freehold', '9999')
     df_kmeans['tenure_bin'] = df_kmeans['tenure_bin'].str.replace(' yrs', '', regex=False)
     df_kmeans['tenure_bin'] = pd.to_numeric(df_kmeans['tenure_bin'])
-    x = df_kmeans[["target_price_cpi_adjusted", "area", "tenure_bin", 
+    x = df_kmeans[["area", "tenure_bin",
         "mrt_nearest_distance_m", "lrt_nearest_distance_m", "poi_count_restaurant",
-         "SORA","monthly_price_index"]]
+        "poi_count_school","poi_count_shopping_mall"]]
     std_scaler = StandardScaler()
     x_scaled = std_scaler.fit_transform(x)
 
@@ -77,8 +78,8 @@ def perform_kmeans(df_input : pd.DataFrame):
             best_no_of_cluster = i
             best_score = score
 
-    logger.info(f"Unsupervised Learning Step 2:Best no of cluster={best_no_of_cluster}, " \
-         f"Best silhouette score={best_score:.4f} .")
+    logger.info("Unsupervised Learning Step 2:Best no of cluster=%d, Best silhouette score=%.4f.",
+            best_no_of_cluster, best_score)
     logger.info("Unsupervised Learning Step 3:Generating Singapore map to show clusters.")
     kmeans = KMeans(n_clusters=best_no_of_cluster, random_state=42)
     df_kmeans["cluster"] = kmeans.fit_predict(x_scaled)
@@ -101,4 +102,4 @@ def perform_kmeans(df_input : pd.DataFrame):
 
     m.save("./src/data/plot/kmeans_Singapore.html")
     logger.info("Unsupervised Learning Step 3:Singapore map showing condo clusters saved.")
-    return df_kmeans, x_scaled
+    return df_kmeans, x_scaled, best_no_of_cluster
