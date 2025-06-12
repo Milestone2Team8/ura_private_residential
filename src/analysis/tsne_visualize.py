@@ -1,12 +1,39 @@
 """
 This module to generate chart using kmeans clusters with t-SNE
 """
+import logging
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 import pandas as pd
 import numpy as np
 
-def generate_plot_tsne_clusters(df_input: pd.DataFrame, x_scaled: np.ndarray):
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def sample_clusters_data(df_input, cluster_col="cluster", samples_per_cluster=50, random_state=42):
+    """
+    Samples a fixed number of rows from each cluster in a DataFrame.
+
+    :param df_input: Input DataFrame containing cluster assignments
+    :type df_input: pd.DataFrame
+    :param cluster_col: Name of the column containing cluster labels
+    :type cluster_col: str
+    :param samples_per_cluster: Maximum number of samples to draw from each cluster
+    :type samples_per_cluster: int
+    :param random_state: Random seed for reproducibility
+    :type random_state: int
+    :return: DataFrame containing the sampled rows from each cluster
+    :rtype: pd.DataFrame
+    """
+    sampled_df = (
+        df_input.groupby(cluster_col, group_keys=False)
+        .apply(lambda x: x.sample(min(len(x), samples_per_cluster), random_state=random_state))
+        .reset_index(drop=True)
+    )
+    return sampled_df
+
+
+def generate_plot_tsne_clusters(df_input: pd.DataFrame, x_scaled: np.ndarray, cluster_count: int):
     """
     Generates plot for condo clusters using t-SNE
 
@@ -14,23 +41,28 @@ def generate_plot_tsne_clusters(df_input: pd.DataFrame, x_scaled: np.ndarray):
     :type df_input: pd.Dataframe
     :param x_scaled: scaled feature matrix
     :type x_scaled: np.ndarray
+    :param cluster_count: best number of clusters
+    :type cluster_count: int
     """
-    print("---Unsupervised Learning Step 4:Generating plot for condo clusters with t-SNE.")
+    logger.info("Unsupervised Learning Step 4:Generating plot for condo clusters with t-SNE.")
     df_vis = df_input.copy()
-    tsne = TSNE(n_components=2, random_state=42, perplexity=30)
-    x_embedded = tsne.fit_transform(x_scaled)
+    df_sampled = sample_clusters_data(df_vis, cluster_col="cluster", samples_per_cluster=100)
+    x_scaled_sampled = x_scaled[df_sampled.index]
+    cluster_count = min(cluster_count, 3)
+    tsne = TSNE(n_components=cluster_count, random_state=42, perplexity=30)
+    x_embedded = tsne.fit_transform(x_scaled_sampled)
 
-    df_vis["market_x"] = x_embedded[:, 0]
-    df_vis["market_y"] = x_embedded[:, 1]
+    df_sampled["market_x"] = x_embedded[:, 0]
+    df_sampled["market_y"] = x_embedded[:, 1]
 
     plt.figure(figsize=(10, 6))
-    plt.scatter(df_vis["market_x"], df_vis["market_y"], c=df_vis["cluster"],
+    plt.scatter(df_sampled["market_x"], df_sampled["market_y"], c=df_sampled["cluster"],
         cmap="viridis", alpha=0.6)
     plt.title("Condo clusters visualized with t-SNE")
     plt.xlabel("t-SNE Dim 1")
     plt.ylabel("t-SNE Dim 2")
     plt.grid(True)
 
-    plt.savefig("./src/data/output/kmeans_tsne.png", bbox_inches="tight")
+    plt.savefig("./src/data/plot/kmeans_tsne.png", bbox_inches="tight")
     plt.close()
-    print("---Unsupervised Learning Step 4:Plot for condo clusters with t-SNE saved.\n")
+    logger.info("Unsupervised Learning Step 4:Plot for condo clusters with t-SNE saved.")
