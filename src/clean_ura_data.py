@@ -101,12 +101,8 @@ def compute_property_tenure(df_property):
     df_property["tenure_bin"] = (
         df_property["tenure"].str.split().str[0:2].str.join(" ")
     )
-    df_with_tenure = df_property.dropna(subset=["tenure_bin"]).copy()
 
-    df_freehold = df_property[df_property["tenure_bin"].isnull()].copy()
-    df_freehold["tenure_bin"] = "Freehold"
-
-    return pd.concat([df_with_tenure, df_freehold], ignore_index=True)
+    return df_property
 
 
 def convert_svy21_to_wgs84(df_property, x_col, y_col):
@@ -226,6 +222,12 @@ def clean_ura_data(
         fmt="%m%y",
         new_col="contract_date_dt",
     )
+
+    # Get most recent three years
+    df_processed = df_processed[
+        (df_processed["contract_date_dt"] >= "2022-05-01")
+        & (df_processed["contract_date_dt"] <= "2025-05-01")
+    ]
 
     # Compute days since first transaction
     df_processed = compute_days_since_1st_trans(df_processed)

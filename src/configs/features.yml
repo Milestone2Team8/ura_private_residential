@@ -1,0 +1,40 @@
+# Features for model cross-validation
+cv_features:
+  num_primary:
+    - area
+    - days_since_1st_trans
+
+  num_amenities:
+    - mrt_nearest_distance_m
+    - lrt_nearest_distance_m
+    - poi_count_restaurant
+    - sum_user_ratings_restaurant
+    - avg_rating_restaurant
+    - avg_price_level_restaurant
+    - price_level_obs_count_restaurant
+
+  num_ecosocial:
+    - monthly_population_growth_rate
+    - monthly_marriage_crude_rate
+    - SORA
+    - cpi_accum
+    - monthly_price_index
+
+  cat_primary:
+    - floorRange
+    - typeOfSale
+    - typeOfArea
+    - district
+    - marketSegment
+    - age_bin
+    - tenure_bin
+
+# Features for outlier detection
+outliers_features:
+  num_features:
+  - area
+  - noOfUnits
+  - target_price
+
+  cat_features:
+  - marketSegment

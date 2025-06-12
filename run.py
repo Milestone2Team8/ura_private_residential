@@ -5,6 +5,9 @@ This module executes the data cleaning function and prepares the dataset
 for downstream unsupervised and supervised learning tasks.
 """
 
+import logging
+from pathlib import Path
+
 from src.analysis.tsne_visualize import generate_plot_tsne_clusters
 from src.analysis.unsupervised_kmeans import perform_kmeans
 from src.clean_google_data import clean_google_data
@@ -29,9 +32,13 @@ from src.find_nearest_train_stn import find_nearest_train_stn
 from src.merge_ura_amenities import merge_amenities_data
 from src.merge_ura_ecosocial import merge_ecosocial_data
 from src.normalize_sale_price import normalize_prices
+from src.run_time_series_cv import run_time_series_cv
 from src.utils.secondary_ds_helper_functions import concat_and_filter_by_date
+from src.utils.spilt_time_series_train_test import split_time_series_train_test
 from src.utils.validate import validate_merge
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 # pylint: disable=unused-variable
 
 
@@ -95,10 +102,15 @@ def run_all(poi_type_list):
     Returns:
         tuple: Cleaned URA dataframe and combined Google POI GeoDataFrame.
     """
+    # Prepare and merge primary with secondary data
     df_pri = clean_ura_data()
 
+    logger.info("---Merging Primary and Secondary Datasets\n")
+
     df_mrt, df_lrt, df_google = prepare_amenities_data(poi_type_list)
-    df_merged = merge_amenities_data(df_pri, [df_mrt, df_lrt, df_google])
+    df_merged = merge_amenities_data(
+        df_pri, [df_mrt, df_lrt, df_google], poi_type_list
+    )
 
     df_econ = prepare_ecosocial_data()
     df_merged = merge_ecosocial_data(df_merged, df_econ)
@@ -106,14 +118,44 @@ def run_all(poi_type_list):
     df_normalized = normalize_prices(df_merged)
 
     df_normalized.to_csv(
-        "./src/data/output/clean_merged_ura_data.csv", index=False
+        Path("./src/data/output/clean_merged_ura_data.csv"), index=False
     )
-    validate_merge(df_pri, df_normalized, df_name="merged dataset")
+    validate_merge(df_pri, df_normalized, df_name="Merged Dataset")
 
     # Unsupervised learning analysis
     df_kmeans, x_scaled = perform_kmeans(df_normalized)
     generate_plot_tsne_clusters(df_kmeans, x_scaled)
     detect_outliers_generate_plots(df_normalized)
+
+    # Supervised learning analysis
+    df_single_trans = df_normalized[df_normalized["noOfUnits"] == 1]
+    df_train, df_test = split_time_series_train_test(df_single_trans)
+    best_model_pipeline = run_time_series_cv(
+        df_train, "contract_date_dt", "target_price"
+    )
+
+    # TO-DO
+    # Please see the “Tips for Project Report” video under “Week 6 Project Check-in”
+
+    # (6 points) Do a feature importance and ablation analysis on your best model to
+    # get insight into which features are or are not contributing to prediction success/failure.
+    # Jerome: The best_model_pipeline can be used to perform .fit on df_train and .predict on
+    # test. to experiment with the different feature sets (e.g. primary data, amenities data
+    # and econ data).
+
+    # (4 points) Do at least one sensitivity analysis on your best model: How sensitive are your
+    # results to choice of (hyper-)parameters, features, or other varying solution elements?
+    # Jerome: Using the best model settings saved under .\data\output\csv_results.json, choose one
+    # hyperparameter to analysis and plot the validation curve. See video under Supervised Learning
+    # Week 2 - Cross Validation 6:58 min on how to plot the curve. Note: The best_model_pipeline
+    # cannot be reused directly because hyperparameter experimentation is still needed.
+
+    # Failure analysis (5 points)
+    # Select at least 3 *specific* examples (records) where prediction failed, and analyze
+    # possible reasons why.
+    # Ideally you should be able to identify at least three different categories of failure.
+    # What future improvements might fix the failures?
+    # Jerome: Predict df_test using the best_model_pipeline and conduct analysis.
 
 
 if __name__ == "__main__":
@@ -123,7 +165,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "--poi_type_list",
         nargs="+",
-        required=True,
+        default=[
+            "restaurant",
+            "school",
+            "hospital",
+            "lodging",
+            "police",
+            "shopping_mall",
+        ],
         help="List of POI types to include (e.g., restaurant school pharmacy)",
     )
     args = parser.parse_args()
