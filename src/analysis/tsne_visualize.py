@@ -1,10 +1,14 @@
 """
 This module to generate chart using kmeans clusters with t-SNE
 """
+import logging
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 import pandas as pd
 import numpy as np
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def generate_plot_tsne_clusters(df_input: pd.DataFrame, x_scaled: np.ndarray):
     """
@@ -15,7 +19,7 @@ def generate_plot_tsne_clusters(df_input: pd.DataFrame, x_scaled: np.ndarray):
     :param x_scaled: scaled feature matrix
     :type x_scaled: np.ndarray
     """
-    print("---Unsupervised Learning Step 4:Generating plot for condo clusters with t-SNE.")
+    logger.info("Unsupervised Learning Step 4:Generating plot for condo clusters with t-SNE.")
     df_vis = df_input.copy()
     tsne = TSNE(n_components=2, random_state=42, perplexity=30)
     x_embedded = tsne.fit_transform(x_scaled)
@@ -31,6 +35,6 @@ def generate_plot_tsne_clusters(df_input: pd.DataFrame, x_scaled: np.ndarray):
     plt.ylabel("t-SNE Dim 2")
     plt.grid(True)
 
-    plt.savefig("./src/data/output/kmeans_tsne.png", bbox_inches="tight")
+    plt.savefig("./src/data/plot/kmeans_tsne.png", bbox_inches="tight")
     plt.close()
-    print("---Unsupervised Learning Step 4:Plot for condo clusters with t-SNE saved.\n")
+    logger.info("Unsupervised Learning Step 4:Plot for condo clusters with t-SNE saved.")

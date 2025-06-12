@@ -2,12 +2,17 @@
 This module performs unsupervised kmeans algorithm and
 generates model
 """
+import logging
 import pandas as pd
 import folium
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def perform_kmeans(df_input : pd.DataFrame):
     """
@@ -23,18 +28,28 @@ def perform_kmeans(df_input : pd.DataFrame):
     cluster_colors = {
         0: "green",
         1: "yellow",
-        2: "red"
+        2: "red",
+        3: "blue",
+        4: "black",
+        5: "brown",
+        6: "orange",
+        7: "purple"
     }
-    print ("---Unsupervised Learning Step 1:Generating elbow chart for kmeans")
+    logger.info("Unsupervised Learning Step 1:Generating elbow chart for kmeans.")
     df_kmeans = df_input.copy()
+    
     df_kmeans = df_kmeans[df_kmeans["noOfUnits"] == 1]
-    x = df_kmeans[["target_price", "area", "mrt_nearest_distance_m",
-        "lrt_nearest_distance_m", "poi_count_restaurant", "SORA", "monthly_price_index"]]
+    df_kmeans['tenure_bin'] = df_kmeans['tenure_bin'].replace('Freehold', '9999')
+    df_kmeans['tenure_bin'] = df_kmeans['tenure_bin'].str.replace(' yrs', '', regex=False)
+    df_kmeans['tenure_bin'] = pd.to_numeric(df_kmeans['tenure_bin'])
+    x = df_kmeans[["target_price_cpi_adjusted", "area", "tenure_bin", 
+        "mrt_nearest_distance_m", "lrt_nearest_distance_m", "poi_count_restaurant",
+         "SORA","monthly_price_index"]]
     std_scaler = StandardScaler()
     x_scaled = std_scaler.fit_transform(x)
 
     i = []
-    max_cluster = 8
+    max_cluster = 10
     for k in range(1, max_cluster + 1):
         kmeans = KMeans(n_clusters=k, random_state=42)
         kmeans.fit(x_scaled)
@@ -47,10 +62,10 @@ def perform_kmeans(df_input : pd.DataFrame):
     plt.title("Elbow Method for Determining Optimal No of Clusters")
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig("./src/data/output/kmeans_elbow_plot.png")
+    plt.savefig("./src/data/plot/kmeans_elbow_plot.png")
     plt.close()
-    print ("---Unsupervised Learning Step 1:Elbow chart for kmeans saved.\n")
-    print ("---Unsupervised Learning Step 2:Generating silhouette score " \
+    logger.info("Unsupervised Learning Step 1:Elbow chart for kmeans saved.")
+    logger.info("Unsupervised Learning Step 2:Generating silhouette score " \
         "to find optimal no of clusters.")
     best_no_of_cluster = 2
     best_score = -1
@@ -62,9 +77,9 @@ def perform_kmeans(df_input : pd.DataFrame):
             best_no_of_cluster = i
             best_score = score
 
-    print(f"---Unsupervised Learning Step 2:Best no of cluster={best_no_of_cluster}, " \
-         f"Best silhouette score={best_score:.4f} .\n")
-    print("---Unsupervised Learning Step 3:Generating Singapore map to show clusters.")
+    logger.info(f"Unsupervised Learning Step 2:Best no of cluster={best_no_of_cluster}, " \
+         f"Best silhouette score={best_score:.4f} .")
+    logger.info("Unsupervised Learning Step 3:Generating Singapore map to show clusters.")
     kmeans = KMeans(n_clusters=best_no_of_cluster, random_state=42)
     df_kmeans["cluster"] = kmeans.fit_predict(x_scaled)
 
@@ -78,11 +93,12 @@ def perform_kmeans(df_input : pd.DataFrame):
             color=cluster_colors.get(row["cluster"]),
             fill=True,
             fill_opacity=0.6,
-            popup=f"Sale Price: {row['target_price']}, Cluster: {row['cluster']}"
+            popup=f"Project: {row['project']}, Sale Price: {row['target_price_cpi_adjusted']}, " \
+                f"Cluster: {row['cluster']}"
         ).add_to(m)
 
     df_kmeans.to_csv("./src/data/output/kmeans_Singapore.csv", index=False)
 
-    m.save("./src/data/output/kmeans_Singapore.html")
-    print("---Unsupervised Learning Step 3:Singapore map showing condo clusters saved.\n")
+    m.save("./src/data/plot/kmeans_Singapore.html")
+    logger.info("Unsupervised Learning Step 3:Singapore map showing condo clusters saved.")
     return df_kmeans, x_scaled
