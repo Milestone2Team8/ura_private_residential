@@ -38,11 +38,11 @@ def create_model_param_grid(mode="find best model", random_state=RANDOM_STATE):
     based on the specified mode of experimentation.
 
     :param mode: Mode of model selection. Options are:
-                 - "find best model": Evaluate multiple model types and hyperparameters.
-                 - "best model feature ablation": Use the best model with fixed parameters to
-                    assess feature sets.
-                 - "best model sensitivity analysis": Vary hyperparameters of the best model to
-                    assess robustness.
+                 - "find_best_model": Evaluate multiple model types and hyperparameters.
+                 - "best_model_single_param": Use the best model with fixed parameters.
+                    It can be used to assess feature sets.
+                 - "best_model_multi_params": Vary hyperparameters of the best model to
+                    assess robustness (i.e. sensitivity analysis).
     :type mode: str
     :param random_state: Random seed for reproducibility.
     :type random_state: int
@@ -50,8 +50,7 @@ def create_model_param_grid(mode="find best model", random_state=RANDOM_STATE):
     :rtype: list
     :raises ValueError: If an unknown mode is provided.
     """
-    # Experiment with best model and its hyperparameters
-    if mode == "best model feature ablation":
+    if mode == "best_model_single_param":
         param_grids = {
             "RF": (
                 RandomForestRegressor,
@@ -62,7 +61,7 @@ def create_model_param_grid(mode="find best model", random_state=RANDOM_STATE):
             )
         }
 
-    elif mode == "best model sensitivity analysis":
+    elif mode == "best_model_multi_params":
         param_grids = {
             "RF": (
                 RandomForestRegressor,
@@ -73,7 +72,7 @@ def create_model_param_grid(mode="find best model", random_state=RANDOM_STATE):
             )
         }
 
-    elif mode == "find best model":
+    elif mode == "find_best_model":
         param_grids = {
             "Linear": (
                 LinearRegression,

@@ -157,7 +157,7 @@ def run_all(poi_type_list):
     # --- All models and features ---
     best_pipeline, best_result = run_time_series_cv(
         df_train,
-        mode="find best model",
+        mode="find_best_model",
         feature_set="all_features",
         output_path=OUTPUT_PATHS["all_models_results"],
     )
@@ -170,9 +170,9 @@ def run_all(poi_type_list):
         "amenities_features",
         "ecosocial_features",
     ]:
-        best_pipeline, feature_ablation_result = run_time_series_cv(
+        _, feature_ablation_result = run_time_series_cv(
             df_train,
-            mode="best model feature ablation",  # best model setting
+            mode="best_model_single_param",  # best model setting
             feature_set=f"{feature_set}",
             output_path=OUTPUT_PATHS[f"{feature_set}_results"],
         )
@@ -180,14 +180,20 @@ def run_all(poi_type_list):
         feature_ablation_results.append(feature_ablation_result)
 
     # --- Best model sensitivity analysis ---
-    best_pipeline, sensitivity_result = run_time_series_cv(
+    _, sensitivity_result = run_time_series_cv(
         df_train,
-        mode="best model sensitivity analysis",
+        mode="best_model_multi_params",
         feature_set="all_features",
         output_path=OUTPUT_PATHS["sensitivity_results"],
     )
 
     # --- Best model failure analysis ---
+    best_pipeline, _ = run_time_series_cv(
+        df_train,
+        mode="best_model_single_param",
+        feature_set="all_features",
+    )
+
     perform_failure_analysis(best_pipeline, df_train, df_test, indices=[0, 1])
 
     # TO-DO

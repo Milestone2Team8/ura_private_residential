@@ -16,7 +16,7 @@ OUTPUT_PATHS = {
 }
 
 
-def process_data(df_train, df_test, target_column="target_price"):
+def preprocess_data(df_train, df_test, target_column="target_price"):
     """Prepare training and testing feature matrices and target vector."""
     df_train = df_train.dropna(axis=1, how="all")
     num_features, cat_features = load_features(df_train, "all_features")
@@ -35,7 +35,7 @@ def train_predict(
     model_pipeline, df_train, df_test, target_column="target_price"
 ):
     """Train model pipeline, predict on test set, and save results with errors."""
-    x_train, y_train, x_test = process_data(df_train, df_test)
+    x_train, y_train, x_test = preprocess_data(df_train, df_test)
 
     model_pipeline.fit(x_train, y_train)
     df_test["pred"] = model_pipeline.predict(x_test)
@@ -47,25 +47,24 @@ def train_predict(
     ]
     df_test.to_csv(OUTPUT_PATHS["test_results"], index=True)
 
-    return df_test
+    return df_test, model_pipeline
 
 
 def explain_prediction_waterfall(
-    model_pipeline, df_train, df_test, indices, prefix="explanation"
+    fitted_model_pipeline, df_train, df_test, indices, prefix="explanation"
 ):
     """SHAP waterfall plot explanations for selected test records."""
-    _, _, x_test = process_data(df_train, df_test)
+    *_, x_test = preprocess_data(df_train, df_test)
 
-    preprocessor = model_pipeline.named_steps["preprocessing"]
-    model = model_pipeline.named_steps["model"]
+    preprocessor = fitted_model_pipeline.named_steps["preprocessing"]
+    model = fitted_model_pipeline.named_steps["model"]
     x_test_processed = preprocessor.transform(x_test)
 
-    explainer = shap.Explainer(model.predict, x_test_processed)
+    explainer = shap.Explainer(model, x_test_processed)
+    shap_values = explainer(x_test_processed)
 
     for i in indices:
-        shap_values = explainer(x_test.iloc[[i]])
-        shap.plots.waterfall(shap_values[0], show=False)
-
+        shap.plots.waterfall(shap_values[i], show=False)
         output_path = OUTPUT_PATHS["shap_plot_dir"] / f"{prefix}_{i}.png"
         plt.savefig(output_path, bbox_inches="tight")
         plt.close()
@@ -88,5 +87,7 @@ def perform_failure_analysis(model_pipeline, df_train, df_test, indices):
     :param indices: List of row indices in the test set for which to generate SHAP plots.
     :type indices: list[int]
     """
-    train_predict(model_pipeline, df_train, df_test)
-    explain_prediction_waterfall(model_pipeline, df_train, df_test, indices)
+    _, fitted_model_pipeline = train_predict(model_pipeline, df_train, df_test)
+    explain_prediction_waterfall(
+        fitted_model_pipeline, df_train, df_test, indices
+    )
