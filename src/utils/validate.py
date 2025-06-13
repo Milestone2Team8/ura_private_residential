@@ -42,3 +42,7 @@ def validate_merge(df_ura, df_merged, df_name="DataFrame"):
     )
 
     diagnose_missing_data(df_merged, df_name)
+
+    logger.info(
+        "Columns with all missing values will be dropped before modeling\n"
+    )

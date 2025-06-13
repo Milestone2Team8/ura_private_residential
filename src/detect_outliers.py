@@ -18,15 +18,16 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from src.utils.custom_distance_metric import gower_distances
-from src.utils.load_configs import load_configs
+from src.utils.load_configs import load_features
 
 RANDOM_STATE = 42
-OUTPUT_PATH = Path("./src/data/output/clean_merged_outliers.csv")
-OUTPUT_PLOT_PATH = Path("./src/data/plot")
 
-CAT_IMPUTER_STRATEGY = "constant"
-CAT_CONSTANT = "missing"
-NUM_IMPUTER_STRATEGY = "mean"
+OUTPUT_PATHS = {
+    "clean_merged_outliers": Path(
+        "./src/data/output/clean_merged_outliers.csv"
+    ),
+    "plot_dir": Path("./src/data/plot"),
+}
 
 DETECTORS = {
     "IForest": IForest(random_state=RANDOM_STATE),
@@ -41,19 +42,18 @@ logger = logging.getLogger(__name__)
 
 def process_outliers_data(
     df_ura,
-    cat_imputer_strategy=CAT_IMPUTER_STRATEGY,
-    num_imputer_strategy=NUM_IMPUTER_STRATEGY,
-    cat_constant=CAT_CONSTANT,
+    cat_imputer_strategy="constant",
+    num_imputer_strategy="mean",
+    cat_constant="missing",
     num_constant=None,
 ):
     """
     Imputes missing values, encode categorical features, and scales numerical features.
     Also returns a boolean array indicating which columns are categorical.
     """
-    configs = load_configs("features.yml")
-    outliers_features = configs["outliers_features"]
-    num_features = outliers_features["num_features"]
-    cat_features = outliers_features["cat_features"]
+    num_features, cat_features = load_features(
+        df_ura, feature_set="outliers_features"
+    )
 
     df_copy = df_ura[num_features + cat_features].copy()
 
@@ -134,7 +134,7 @@ def plot_outliers_umap(
     df_outliers_sample,
     label_col,
     gower=True,
-    output_plot_path=OUTPUT_PLOT_PATH,
+    output_path=OUTPUT_PATHS["plot_dir"],
 ):
     """
     Plot a 2D UMAP of outlier samples colored by the specified label column and save the plot.
@@ -194,14 +194,14 @@ def plot_outliers_umap(
     plt.legend()
 
     plt.savefig(
-        output_plot_path / f"umap_{label_col}.png",
+        output_path / f"umap_{label_col}.png",
         dpi=300,
         bbox_inches="tight",
     )
 
 
 def detect_outliers_generate_plots(
-    df_ura, detectors=None, output_path=OUTPUT_PATH
+    df_ura, detectors=None, output_path=OUTPUT_PATHS["clean_merged_outliers"]
 ):
     """
     Detect outliers in the provided URA property DataFrame using multiple detectors,
