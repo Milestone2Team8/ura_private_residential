@@ -32,6 +32,7 @@ from src.find_nearest_train_stn import find_nearest_train_stn
 from src.merge_ura_amenities import merge_amenities_data
 from src.merge_ura_ecosocial import merge_ecosocial_data
 from src.normalize_sale_price import normalize_prices
+from src.perform_failure_analysis import perform_failure_analysis
 from src.run_time_series_cv import run_time_series_cv
 from src.utils.secondary_ds_helper_functions import concat_and_filter_by_date
 from src.utils.spilt_time_series_train_test import split_time_series_train_test
@@ -162,25 +163,32 @@ def run_all(poi_type_list):
     )
 
     # --- Best model feature ablation analysis ---
+    feature_ablation_results = []
+
     for feature_set in [
         "primary_features",
         "amenities_features",
         "ecosocial_features",
     ]:
-        _, best_result = run_time_series_cv(
+        best_pipeline, feature_ablation_result = run_time_series_cv(
             df_train,
             mode="best model feature ablation",  # best model setting
             feature_set=f"{feature_set}",
             output_path=OUTPUT_PATHS[f"{feature_set}_results"],
         )
 
+        feature_ablation_results.append(feature_ablation_result)
+
     # --- Best model sensitivity analysis ---
-    _, best_result = run_time_series_cv(
+    best_pipeline, sensitivity_result = run_time_series_cv(
         df_train,
         mode="best model sensitivity analysis",
         feature_set="all_features",
         output_path=OUTPUT_PATHS["sensitivity_results"],
     )
+
+    # --- Best model failure analysis ---
+    perform_failure_analysis(best_pipeline, df_train, df_test, indices=[0, 1])
 
     # TO-DO
     # Please see the “Tips for Project Report” video under “Week 6 Project Check-in”

@@ -4,7 +4,6 @@ Performs time series cross validation to find the best regressor model.
 
 import json
 import logging
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -23,6 +22,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from sklearn.svm import SVR
 
+from src.utils.convert_interval_to_str import convert_interval_to_str
 from src.utils.load_configs import load_features
 
 logging.basicConfig(level=logging.INFO)
@@ -30,7 +30,6 @@ logger = logging.getLogger(__name__)
 
 
 RANDOM_STATE = 42
-OUTPUT_PATH = Path("./src/data/output/all_models_features_results.json")
 
 
 def create_model_param_grid(mode="find best model", random_state=RANDOM_STATE):
@@ -156,42 +155,44 @@ def run_time_series_cv(
     feature_set="all_features",
     n_splits=5,
     best_metric_name="MAE",
-    output_path=OUTPUT_PATH,
+    output_path=None,
 ):  # pylint: disable=too-many-locals, too-many-statements, too-many-arguments, too-many-positional-arguments, too-many-branches
     """
-    Performs time series cross-validation with preprocessing and model selection.
+    Performs time series cross-validation with preprocessing, model selection, and evaluation.
 
-    This function runs cross-validation using time-based splits to evaluate multiple
-    regression models. It handles numeric and categorical feature preprocessing, fits models,
-    evaluates them using various metrics, and saves the results including feature importances.
+    This function applies time-based cross-validation on a supervised regression task.
+    It builds model pipelines that include preprocessing for numerical and categorical features,
+    fits different model configurations, evaluates them across folds using specified metrics,
+    computes feature importance, and saves results if a path is provided.
 
-    :param df_train: Input DataFrame containing features, target, and a date column.
+    :param df_train: Training DataFrame containing feature columns, target column, and a datetime
+                     column.
     :type df_train: pd.DataFrame
-    :param mode: Mode of model selection. Options are:
-                 - "find best model": Evaluate multiple model types and hyperparameters.
-                 - "best model feature ablation": Use the best model with fixed parameters
-                    to assess feature sets.
-                 - "best model sensitivity analysis": Vary hyperparameters of the best model
-                    to assess robustness.
+    :param mode: One of the following modes to define model selection logic:
+                 - "find best model": Test multiple model types and hyperparameters.
+                 - "best model feature ablation": Evaluate the best model on subsets of features.
+                 - "best model sensitivity analysis": Assess robustness of the best model by varying
+                    hyperparameters.
     :type mode: str
-    :param date_column: Name of the datetime column used for time-based splitting. Default is
-                        "contract_date_dt".
+    :param date_column: Name of the datetime column used to sort records chronologically. Default
+                        is "contract_date_dt".
     :type date_column: str
-    :param target_column: Name of the target column to be predicted. Default is "target_price".
+    :param target_column: Name of the target variable to predict. Default is "target_price".
     :type target_column: str
-    :param feature_set: Name of the feature set to use. Options include "all_features",
-                        "primary_features", etc.
+    :param feature_set: Set of features to use (e.g., "all_features", "primary_features").
     :type feature_set: str
-    :param n_splits: Number of folds for time series cross-validation. Default is 5.
+    :param n_splits: Number of time-based splits for cross-validation. Default is 5.
     :type n_splits: int
-    :param best_metric_name: Metric to select the best model. Either "MAE" (minimized) or
-                             "R2" (maximized).
+    :param best_metric_name: Metric used to select the best model. Options are "RMSE" or "MAE"
+                         (lower is better), and "R2" (higher is better).
     :type best_metric_name: str
-    :param output_path: Path to save the cross-validation results JSON file.
-    :type output_path: pathlib.Path
+    :param output_path: Optional path to save the cross-validation results as a JSON file.
+    :type output_path: pathlib.Path or None
 
-    :return: Tuple containing the best trained sklearn Pipeline and its associated CV result
-            dictionary.
+    :return: Tuple of (best_pipeline, best_result), where:
+             - best_pipeline is the sklearn Pipeline object for the best-performing model.
+             - best_result is a dictionary with model name, hyperparameters, metrics, and feature
+             importance.
     :rtype: tuple[sklearn.pipeline.Pipeline, dict]
     """
     logger.info("---Running Supervised Learning Cross-Validation\n")
@@ -203,14 +204,7 @@ def run_time_series_cv(
 
     df_sorted = df_train.sort_values(date_column).copy()
     x_all = df_sorted.drop(columns=[target_column])
-
-    # Convert output from pd.cut into str
-    for col in cat_features:
-        if pd.api.types.is_categorical_dtype(x_all[col]) or isinstance(
-            x_all[col].dropna().iloc[0], pd.Interval
-        ):
-            x_all[col] = x_all[col].astype(str)
-
+    x_all = convert_interval_to_str(x_all, cat_features)
     y_all = df_sorted[target_column]
 
     tscv = TimeSeriesSplit(n_splits=n_splits)
@@ -222,7 +216,10 @@ def run_time_series_cv(
                 "num",
                 Pipeline(
                     [
-                        ("imputer", SimpleImputer(strategy="mean")),
+                        (
+                            "imputer",
+                            SimpleImputer(strategy="constant", fill_value=0),
+                        ),
                         ("scaler", MinMaxScaler()),
                     ]
                 ),
@@ -366,7 +363,8 @@ def run_time_series_cv(
         "best_metric_name": best_metric_name,
     }
 
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(cv_results, f, indent=4)
+    if output_path:
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(cv_results, f, indent=4)
 
     return best_pipeline, best_result

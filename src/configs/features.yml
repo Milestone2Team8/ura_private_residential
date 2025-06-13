@@ -61,7 +61,7 @@ outliers_features:
   - marketSegment
 
 # Ablated Feature Groups
-# --- Primary data only --- 
+# --- Primary features only --- 
 primary_features:
   num_primary:
     - area
@@ -76,7 +76,7 @@ primary_features:
     - age_bin
     - tenure_bin
 
-# --- Amenities data only --- 
+# --- Amenities features only --- 
 amenities_features:
   num_amenities:
     - mrt_nearest_distance_m
@@ -106,7 +106,7 @@ amenities_features:
     - avg_rating_shopping_mall
     - avg_price_level_shopping_mall
 
-# --- Ecosocial data only --- 
+# --- Ecosocial features only --- 
 ecosocial_features:
   num_ecosocial:
     - monthly_population_growth_rate
