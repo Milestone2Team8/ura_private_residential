@@ -1,5 +1,7 @@
+# Pre-fix each set of feature with num_ or cat_
+
 # Features for model cross-validation
-cv_features:
+all_features:
   num_primary:
     - area
     - days_since_1st_trans
@@ -7,11 +9,30 @@ cv_features:
   num_amenities:
     - mrt_nearest_distance_m
     - lrt_nearest_distance_m
+
     - poi_count_restaurant
-    - sum_user_ratings_restaurant
     - avg_rating_restaurant
     - avg_price_level_restaurant
-    - price_level_obs_count_restaurant
+
+    - poi_count_school
+    - avg_rating_school
+    - avg_price_level_school
+
+    - poi_count_hospital
+    - avg_rating_hospital
+    - avg_price_level_hospital
+
+    - poi_count_lodging
+    - avg_rating_lodging
+    - avg_price_level_lodging
+
+    - poi_count_police
+    - avg_rating_police
+    - avg_price_level_police
+
+    - poi_count_shopping_mall
+    - avg_rating_shopping_mall
+    - avg_price_level_shopping_mall
 
   num_ecosocial:
     - monthly_population_growth_rate
@@ -38,3 +59,58 @@ outliers_features:
 
   cat_features:
   - marketSegment
+
+# Ablated Feature Groups
+# --- Primary data only --- 
+primary_features:
+  num_primary:
+    - area
+    - days_since_1st_trans
+
+  cat_primary:
+    - floorRange
+    - typeOfSale
+    - typeOfArea
+    - district
+    - marketSegment
+    - age_bin
+    - tenure_bin
+
+# --- Amenities data only --- 
+amenities_features:
+  num_amenities:
+    - mrt_nearest_distance_m
+    - lrt_nearest_distance_m
+
+    - poi_count_restaurant
+    - avg_rating_restaurant
+    - avg_price_level_restaurant
+
+    - poi_count_school
+    - avg_rating_school
+    - avg_price_level_school
+
+    - poi_count_hospital
+    - avg_rating_hospital
+    - avg_price_level_hospital
+
+    - poi_count_lodging
+    - avg_rating_lodging
+    - avg_price_level_lodging
+
+    - poi_count_police
+    - avg_rating_police
+    - avg_price_level_police
+
+    - poi_count_shopping_mall
+    - avg_rating_shopping_mall
+    - avg_price_level_shopping_mall
+
+# --- Ecosocial data only --- 
+ecosocial_features:
+  num_ecosocial:
+    - monthly_population_growth_rate
+    - monthly_marriage_crude_rate
+    - SORA
+    - cpi_accum
+    - monthly_price_index

@@ -1,0 +1,95 @@
+{
+    "cv_results": [
+        {
+            "model": "RF_1: max_depth=15, random_state=42",
+            "hyperparameters": {
+                "bootstrap": true,
+                "ccp_alpha": 0.0,
+                "criterion": "squared_error",
+                "max_depth": 15,
+                "max_features": 1.0,
+                "max_leaf_nodes": null,
+                "max_samples": null,
+                "min_impurity_decrease": 0.0,
+                "min_samples_leaf": 1,
+                "min_samples_split": 2,
+                "min_weight_fraction_leaf": 0.0,
+                "monotonic_cst": null,
+                "n_estimators": 100,
+                "n_jobs": null,
+                "oob_score": false,
+                "random_state": 42,
+                "verbose": 0,
+                "warm_start": false
+            },
+            "features": [
+                "monthly_population_growth_rate",
+                "monthly_marriage_crude_rate",
+                "SORA",
+                "cpi_accum",
+                "monthly_price_index"
+            ],
+            "metrics": {
+                "RMSE": 1303.7143800033468,
+                "MAE": 821744.6293615246,
+                "R2": -0.025903745641159538,
+                "RMSE_std": 49.447749863852685,
+                "MAE_std": 43945.67387392844,
+                "R2_std": 0.014397488817708174
+            },
+            "feature_importance": {
+                "num__monthly_population_growth_rate": 0.025726199641708296,
+                "num__monthly_marriage_crude_rate": 0.013142759718812225,
+                "num__SORA": 0.13133909950970155,
+                "num__cpi_accum": 0.20562515222456926,
+                "num__monthly_price_index": 0.6241667889052087
+            }
+        }
+    ],
+    "best_model": {
+        "model": "RF_1: max_depth=15, random_state=42",
+        "hyperparameters": {
+            "bootstrap": true,
+            "ccp_alpha": 0.0,
+            "criterion": "squared_error",
+            "max_depth": 15,
+            "max_features": 1.0,
+            "max_leaf_nodes": null,
+            "max_samples": null,
+            "min_impurity_decrease": 0.0,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_weight_fraction_leaf": 0.0,
+            "monotonic_cst": null,
+            "n_estimators": 100,
+            "n_jobs": null,
+            "oob_score": false,
+            "random_state": 42,
+            "verbose": 0,
+            "warm_start": false
+        },
+        "features": [
+            "monthly_population_growth_rate",
+            "monthly_marriage_crude_rate",
+            "SORA",
+            "cpi_accum",
+            "monthly_price_index"
+        ],
+        "metrics": {
+            "RMSE": 1303.7143800033468,
+            "MAE": 821744.6293615246,
+            "R2": -0.025903745641159538,
+            "RMSE_std": 49.447749863852685,
+            "MAE_std": 43945.67387392844,
+            "R2_std": 0.014397488817708174
+        },
+        "feature_importance": {
+            "num__monthly_population_growth_rate": 0.025726199641708296,
+            "num__monthly_marriage_crude_rate": 0.013142759718812225,
+            "num__SORA": 0.13133909950970155,
+            "num__cpi_accum": 0.20562515222456926,
+            "num__monthly_price_index": 0.6241667889052087
+        }
+    },
+    "best_metric_name": "MAE"
+}

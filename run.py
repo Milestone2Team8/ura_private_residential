@@ -41,11 +41,28 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 # pylint: disable=unused-variable
 
+OUTPUT_PATHS = {
+    "clean_merged_data": Path("./src/data/output/clean_merged_ura_data.csv"),
+    "all_models_results": Path(
+        "./src/data/output/all_models_features_results.json"
+    ),
+    "primary_features_results": Path(
+        "./src/data/output/best_model_primary_features_results.json"
+    ),
+    "amenities_features_results": Path(
+        "./src/data/output/best_model_amenities_features_results.json"
+    ),
+    "ecosocial_features_results": Path(
+        "./src/data/output/best_model_ecosocial_features_results.json"
+    ),
+    "sensitivity_results": Path(
+        "./src/data/output/best_model_sensitivity_results.json"
+    ),
+}
+
 
 def prepare_ecosocial_data():
-    """
-    Prepares economic social indicators datasets.
-    """
+    """Prepares economic social indicators datasets."""
     df_monthly_population_growth_rates = prepare_population_data(
         clean_population_data(), "2020", "2025"
     )
@@ -81,9 +98,7 @@ def prepare_ecosocial_data():
 
 
 def prepare_amenities_data(poi_type_list):
-    """
-    Prepares amenities datasets.
-    """
+    """Prepares amenities datasets."""
     df_nearest_mrt, df_nearest_lrt = find_nearest_train_stn()
     df_google_clean = clean_google_data(poi_type_list)
     df_google_nearest = find_nearby_google_poi(poi_type_list)
@@ -91,47 +106,80 @@ def prepare_amenities_data(poi_type_list):
     return df_nearest_mrt, df_nearest_lrt, df_google_nearest
 
 
+def prepare_merge_all_data(poi_type_list):
+    """Prepares and merges primary and secondary datasets."""
+    logger.info("---Cleaning and Processing Primary Dataset\n")
+    df_primary_data = clean_ura_data()
+
+    logger.info("---Merging Primary and Secondary Datasets\n")
+
+    df_mrt, df_lrt, df_google = prepare_amenities_data(poi_type_list)
+    df_merged_data = merge_amenities_data(
+        df_primary_data, [df_mrt, df_lrt, df_google], poi_type_list
+    )
+
+    df_econ_data = prepare_ecosocial_data()
+    df_merged_data = merge_ecosocial_data(df_merged_data, df_econ_data)
+
+    df_merged_data = normalize_prices(df_merged_data)
+
+    df_merged_data.to_csv(OUTPUT_PATHS["clean_merged_data"], index=False)
+    validate_merge(df_primary_data, df_merged_data, df_name="Merged Dataset")
+
+    return df_merged_data
+
+
 def run_all(poi_type_list):
     """
     Cleans raw URA private residential data and Google POI data
     and prepares them for modeling tasks.
 
-    Args:
-        poi_type_list (list of str): List of POI types to clean and combine.
+    :param poi_type_list: List of POI types to clean and combine.
+    :type poi_type_list: list of str
 
-    Returns:
-        tuple: Cleaned URA dataframe and combined Google POI GeoDataFrame.
+    :return: Cleaned URA dataframe and combined Google POI GeoDataFrame.
+    :rtype: tuple
     """
+
     # Prepare and merge primary with secondary data
-    df_pri = clean_ura_data()
-
-    logger.info("---Merging Primary and Secondary Datasets\n")
-
-    df_mrt, df_lrt, df_google = prepare_amenities_data(poi_type_list)
-    df_merged = merge_amenities_data(
-        df_pri, [df_mrt, df_lrt, df_google], poi_type_list
-    )
-
-    df_econ = prepare_ecosocial_data()
-    df_merged = merge_ecosocial_data(df_merged, df_econ)
-
-    df_normalized = normalize_prices(df_merged)
-
-    df_normalized.to_csv(
-        Path("./src/data/output/clean_merged_ura_data.csv"), index=False
-    )
-    validate_merge(df_pri, df_normalized, df_name="Merged Dataset")
+    df_merged_data = prepare_merge_all_data(poi_type_list)
 
     # Unsupervised learning analysis
-    df_kmeans, x_scaled, no_of_cluster = perform_kmeans(df_normalized)
+    df_kmeans, x_scaled, no_of_cluster = perform_kmeans(df_merged_data)
     generate_plot_tsne_clusters(df_kmeans, x_scaled, no_of_cluster)
-    detect_outliers_generate_plots(df_normalized)
+    detect_outliers_generate_plots(df_merged_data)
 
     # Supervised learning analysis
-    df_single_trans = df_normalized[df_normalized["noOfUnits"] == 1]
+    df_single_trans = df_merged_data[df_merged_data["noOfUnits"] == 1]
     df_train, df_test = split_time_series_train_test(df_single_trans)
-    best_model_pipeline = run_time_series_cv(
-        df_train, "contract_date_dt", "target_price"
+
+    # --- All models and features ---
+    best_pipeline, best_result = run_time_series_cv(
+        df_train,
+        mode="find best model",
+        feature_set="all_features",
+        output_path=OUTPUT_PATHS["all_models_results"],
+    )
+
+    # --- Best model feature ablation analysis ---
+    for feature_set in [
+        "primary_features",
+        "amenities_features",
+        "ecosocial_features",
+    ]:
+        _, best_result = run_time_series_cv(
+            df_train,
+            mode="best model feature ablation",  # best model setting
+            feature_set=f"{feature_set}",
+            output_path=OUTPUT_PATHS[f"{feature_set}_results"],
+        )
+
+    # --- Best model sensitivity analysis ---
+    _, best_result = run_time_series_cv(
+        df_train,
+        mode="best model sensitivity analysis",
+        feature_set="all_features",
+        output_path=OUTPUT_PATHS["sensitivity_results"],
     )
 
     # TO-DO
