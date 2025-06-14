@@ -202,12 +202,10 @@ def run_time_series_cv(
     for model_name, regressor in regressors:
         fold_metrics = []
         importances_all_folds = []
-        print(len(x_all), len(x_all.columns))
         for _, (train_idx, val_idx) in enumerate(tscv.split(x_all)):
             x_train = x_all.iloc[train_idx][num_features + cat_features]
             x_val = x_all.iloc[val_idx][num_features + cat_features]
             y_train = y_all.iloc[train_idx]
-            print(len(x_train), len(x_train.columns), len(y_train))
             y_val = y_all.iloc[val_idx]
 
             pipeline = Pipeline(
