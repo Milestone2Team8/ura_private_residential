@@ -97,7 +97,9 @@ def plot_mean_abs_error_by_district_line(
     Groups the dataframe by district and plots the mean absolute error as a line plot.
     """
     mean_error_by_district = (
-        df_test.groupby(district_col)[error_col].mean().sort_values()
+        df_test.groupby(district_col, observed=False)[error_col]
+        .mean()
+        .sort_values()
     )
 
     output_path = (

@@ -146,9 +146,9 @@ def run_all(poi_type_list):
     df_merged_data = prepare_merge_all_data(poi_type_list)
 
     # Unsupervised learning analysis
-    # df_kmeans, x_scaled, no_of_cluster = perform_kmeans(df_merged_data)
-    # generate_plot_tsne_clusters(df_kmeans, x_scaled, no_of_cluster)
-    # detect_outliers_generate_plots(df_merged_data)
+    df_kmeans, x_scaled, no_of_cluster = perform_kmeans(df_merged_data)
+    generate_plot_tsne_clusters(df_kmeans, x_scaled, no_of_cluster)
+    detect_outliers_generate_plots(df_merged_data)
 
     # Supervised learning analysis
     df_single_trans = df_merged_data[df_merged_data["noOfUnits"] == 1]
