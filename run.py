@@ -155,37 +155,37 @@ def run_all(poi_type_list):
     df_train, df_test = split_time_series_train_test(df_single_trans)
 
     # --- All models and features ---
-    # best_pipeline, best_result = run_time_series_cv(
-    #     df_train,
-    #     mode="find_best_model",
-    #     feature_set="all_features",
-    #     output_path=OUTPUT_PATHS["all_models_results"],
-    # )
+    best_pipeline, best_result = run_time_series_cv(
+        df_train,
+        mode="find_best_model",
+        feature_set="all_features",
+        output_path=OUTPUT_PATHS["all_models_results"],
+    )
 
     # --- Best model feature ablation analysis ---
-    # feature_ablation_results = []
+    feature_ablation_results = []
 
-    # for feature_set in [
-    #     "primary_features",
-    #     "amenities_features",
-    #     "ecosocial_features",
-    # ]:
-    #     _, feature_ablation_result = run_time_series_cv(
-    #         df_train,
-    #         mode="best_model_single_param",  # best model setting
-    #         feature_set=f"{feature_set}",
-    #         output_path=OUTPUT_PATHS[f"{feature_set}_results"],
-    #     )
+    for feature_set in [
+        "primary_features",
+        "amenities_features",
+        "ecosocial_features",
+    ]:
+        _, feature_ablation_result = run_time_series_cv(
+            df_train,
+            mode="best_model_single_param",  # best model setting
+            feature_set=f"{feature_set}",
+            output_path=OUTPUT_PATHS[f"{feature_set}_results"],
+        )
 
-    #     feature_ablation_results.append(feature_ablation_result)
+        feature_ablation_results.append(feature_ablation_result)
 
     # --- Best model sensitivity analysis ---
-    # _, sensitivity_result = run_time_series_cv(
-    #     df_train,
-    #     mode="best_model_multi_params",
-    #     feature_set="all_features",
-    #     output_path=OUTPUT_PATHS["sensitivity_results"],
-    # )
+    _, sensitivity_result = run_time_series_cv(
+        df_train,
+        mode="best_model_multi_params",
+        feature_set="all_features",
+        output_path=OUTPUT_PATHS["sensitivity_results"],
+    )
 
     # --- Best model failure analysis ---
     best_pipeline, _ = run_time_series_cv(
