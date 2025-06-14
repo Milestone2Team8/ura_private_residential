@@ -146,55 +146,59 @@ def run_all(poi_type_list):
     df_merged_data = prepare_merge_all_data(poi_type_list)
 
     # Unsupervised learning analysis
-    df_kmeans, x_scaled, no_of_cluster = perform_kmeans(df_merged_data)
-    generate_plot_tsne_clusters(df_kmeans, x_scaled, no_of_cluster)
-    detect_outliers_generate_plots(df_merged_data)
+    # df_kmeans, x_scaled, no_of_cluster = perform_kmeans(df_merged_data)
+    # generate_plot_tsne_clusters(df_kmeans, x_scaled, no_of_cluster)
+    # detect_outliers_generate_plots(df_merged_data)
 
     # Supervised learning analysis
     df_single_trans = df_merged_data[df_merged_data["noOfUnits"] == 1]
     df_train, df_test = split_time_series_train_test(df_single_trans)
 
     # --- All models and features ---
-    best_pipeline, best_result = run_time_series_cv(
-        df_train,
-        mode="find_best_model",
-        feature_set="all_features",
-        output_path=OUTPUT_PATHS["all_models_results"],
-    )
+    # best_pipeline, best_result = run_time_series_cv(
+    #     df_train,
+    #     mode="find_best_model",
+    #     feature_set="all_features",
+    #     output_path=OUTPUT_PATHS["all_models_results"],
+    # )
 
     # --- Best model feature ablation analysis ---
-    feature_ablation_results = []
+    # feature_ablation_results = []
 
-    for feature_set in [
-        "primary_features",
-        "amenities_features",
-        "ecosocial_features",
-    ]:
-        _, feature_ablation_result = run_time_series_cv(
-            df_train,
-            mode="best_model_single_param",  # best model setting
-            feature_set=f"{feature_set}",
-            output_path=OUTPUT_PATHS[f"{feature_set}_results"],
-        )
+    # for feature_set in [
+    #     "primary_features",
+    #     "amenities_features",
+    #     "ecosocial_features",
+    # ]:
+    #     _, feature_ablation_result = run_time_series_cv(
+    #         df_train,
+    #         mode="best_model_single_param",  # best model setting
+    #         feature_set=f"{feature_set}",
+    #         output_path=OUTPUT_PATHS[f"{feature_set}_results"],
+    #     )
 
-        feature_ablation_results.append(feature_ablation_result)
+    #     feature_ablation_results.append(feature_ablation_result)
 
     # --- Best model sensitivity analysis ---
-    _, sensitivity_result = run_time_series_cv(
-        df_train,
-        mode="best_model_multi_params",
-        feature_set="all_features",
-        output_path=OUTPUT_PATHS["sensitivity_results"],
-    )
+    # _, sensitivity_result = run_time_series_cv(
+    #     df_train,
+    #     mode="best_model_multi_params",
+    #     feature_set="all_features",
+    #     output_path=OUTPUT_PATHS["sensitivity_results"],
+    # )
 
     # --- Best model failure analysis ---
     best_pipeline, _ = run_time_series_cv(
         df_train,
         mode="best_model_single_param",
         feature_set="all_features",
+        n_splits=2,
     )
 
-    perform_failure_analysis(best_pipeline, df_train, df_test, indices=[0, 1])
+    idx_top_n_errors = [10137, 9583, 9589, 9585, 4576, 4549, 6700, 9536, 5411]
+    perform_failure_analysis(
+        best_pipeline, df_train, df_test, indices=idx_top_n_errors
+    )
 
     # TO-DO
     # Please see the “Tips for Project Report” video under “Week 6 Project Check-in”
