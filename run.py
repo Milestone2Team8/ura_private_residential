@@ -10,7 +10,7 @@ from pathlib import Path
 
 from src.analysis.tsne_visualize import generate_plot_tsne_clusters
 from src.analysis.unsupervised_kmeans import perform_kmeans
-from src.analysis.ablation_analysis import run_ablation_analysis
+from src.analysis.ablation_analysis import perform_ablation_analysis
 from src.clean_google_data import clean_google_data
 from src.clean_prepare_cpi_data import clean_cpi_data, prepare_cpi_data
 from src.clean_prepare_marriage_data import (
@@ -197,8 +197,8 @@ def run_all(poi_type_list):
 
     perform_failure_analysis(best_pipeline, df_train, df_test, indices=[0, 1])
 
-    # Feature importance and ablation analysis
-    run_ablation_analysis(best_model_pipeline, df_train, df_test,
+    # Ablation analysis
+    perform_ablation_analysis(best_pipeline, df_train, df_test,
        target_column="target_price")
 
     # TO-DO

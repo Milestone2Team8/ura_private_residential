@@ -11,7 +11,7 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.base import clone, BaseEstimator
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from src.utils.load_configs import load_configs
+from src.utils.load_configs import load_configs_file
 
 
 logging.basicConfig(level=logging.INFO)
@@ -59,7 +59,7 @@ def _load_ablation_config_and_metrics(config_path, cv_result_path):
     :return: Tuple of (list of ablation features, baseline MAE)
     :rtype: tuple[list[str], float]
     """
-    all_features = load_configs(config_path)["ablation_features"]
+    all_features = load_configs_file(config_path)["ablation_features"]
     with open(cv_result_path, "r", encoding="utf-8") as f:
         baseline_mae = json.load(f)["best_model"]["metrics"]["MAE"]
     return all_features, baseline_mae
@@ -145,10 +145,10 @@ def _evaluate_with_added_feature(inputs: AblationInput) -> float:
     return mean_absolute_error(inputs.data.y_test, preds)
 
 
-def run_ablation_analysis(best_model_pipeline, df_input_train,
+def perform_ablation_analysis(best_model_pipeline, df_input_train,
         df_input_test, target_column="target_price"):
     """
-    Performs ablation analysis on the best model pipeline by removing one feature at a time
+    Performs ablation analysis on the best model pipeline by adding one feature at a time
     and observing the change in Mean Absolute Error (MAE) on the test set.
 
     :param best_model_pipeline: Fitted sklearn Pipeline from cross-validation
@@ -162,7 +162,7 @@ def run_ablation_analysis(best_model_pipeline, df_input_train,
     """
 
     all_ablation_features, baseline_mae = _load_ablation_config_and_metrics(
-        "features.yml", "./src/data/output/cv_results.json"
+        "features.yml", "./src/data/output/all_models_features_results.json"
     )
     logger.info("Loaded baseline MAE: %.4f", baseline_mae)
 
