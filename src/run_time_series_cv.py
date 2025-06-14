@@ -254,7 +254,6 @@ def run_time_series_cv(
     for model_name, regressor in regressors:
         fold_metrics = []
         importances_all_folds = []
-
         for _, (train_idx, val_idx) in enumerate(tscv.split(x_all)):
             x_train = x_all.iloc[train_idx][num_features + cat_features]
             x_val = x_all.iloc[val_idx][num_features + cat_features]
