@@ -10,6 +10,7 @@ from pathlib import Path
 
 from src.analysis.tsne_visualize import generate_plot_tsne_clusters
 from src.analysis.unsupervised_kmeans import perform_kmeans
+from src.analysis.ablation_analysis import run_ablation_analysis
 from src.clean_google_data import clean_google_data
 from src.clean_prepare_cpi_data import clean_cpi_data, prepare_cpi_data
 from src.clean_prepare_marriage_data import (
@@ -123,8 +124,8 @@ def run_all(poi_type_list):
     validate_merge(df_pri, df_normalized, df_name="Merged Dataset")
 
     # Unsupervised learning analysis
-    df_kmeans, x_scaled, no_of_cluster = perform_kmeans(df_normalized)
-    generate_plot_tsne_clusters(df_kmeans, x_scaled, no_of_cluster)
+    #df_kmeans, x_scaled, no_of_cluster = perform_kmeans(df_normalized)
+    #generate_plot_tsne_clusters(df_kmeans, x_scaled, no_of_cluster)
     detect_outliers_generate_plots(df_normalized)
 
     # Supervised learning analysis
@@ -133,6 +134,10 @@ def run_all(poi_type_list):
     best_model_pipeline = run_time_series_cv(
         df_train, "contract_date_dt", "target_price"
     )
+
+    # Feature importance and ablation analysis
+    run_ablation_analysis(best_model_pipeline, df_train, df_test,
+       target_column="target_price")
 
     # TO-DO
     # Please see the “Tips for Project Report” video under “Week 6 Project Check-in”
