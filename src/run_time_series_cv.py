@@ -4,7 +4,6 @@ Performs time series cross validation to find the best regressor model.
 
 import json
 import logging
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -13,51 +12,96 @@ from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.metrics import (
+    mean_absolute_error,
+    r2_score,
+    root_mean_squared_error,
+)
 from sklearn.model_selection import ParameterGrid, TimeSeriesSplit
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from sklearn.svm import SVR
 
-from src.utils.load_configs import load_configs
+from src.utils.convert_interval_to_str import convert_interval_to_str
+from src.utils.load_configs import load_features
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 RANDOM_STATE = 42
-OUTPUT_PATH = Path("./src/data/output/cv_results.json")
 
 
-def build_regressors(random_state=RANDOM_STATE):
-    """Builds a list of regressors and their param grids."""
-    param_grids = {
-        "Linear": (
-            LinearRegression,
-            {},
-        ),
-        "RF": (
-            RandomForestRegressor,
-            {
-                "max_depth": [5, 10, 15],
-                "random_state": [random_state],
-            },
-        ),
-        "SVR": (
-            SVR,
-            {"kernel": ["rbf"], "C": [0.1, 0.5, 1.0]},
-        ),
-    }
+def create_model_param_grid(mode="find best model", random_state=RANDOM_STATE):
+    """
+    Builds a list of regression models with their corresponding hyperparameter grids,
+    based on the specified mode of experimentation.
 
-    all_regressors = []
+    :param mode: Mode of model selection. Options are:
+                 - "find_best_model": Evaluate multiple model types and hyperparameters.
+                 - "best_model_single_param": Use the best model with fixed parameters.
+                    It can be used to assess feature sets.
+                 - "best_model_multi_params": Vary hyperparameters of the best model to
+                    assess robustness (i.e. sensitivity analysis).
+    :type mode: str
+    :param random_state: Random seed for reproducibility.
+    :type random_state: int
+    :return: A list of (model_name, sklearn estimator) combinations with parameter settings.
+    :rtype: list
+    :raises ValueError: If an unknown mode is provided.
+    """
+    if mode == "best_model_single_param":
+        param_grids = {
+            "RF": (
+                RandomForestRegressor,
+                {
+                    "max_depth": [15],
+                    "random_state": [random_state],
+                },
+            )
+        }
+
+    elif mode == "best_model_multi_params":
+        param_grids = {
+            "RF": (
+                RandomForestRegressor,
+                {
+                    "max_depth": [5, 15, 30, 35, 40],
+                    "random_state": [random_state],
+                },
+            )
+        }
+
+    elif mode == "find_best_model":
+        param_grids = {
+            "Linear": (
+                LinearRegression,
+                {},
+            ),
+            "RF": (
+                RandomForestRegressor,
+                {
+                    "max_depth": [5, 10, 15],
+                    "random_state": [random_state],
+                },
+            ),
+            "SVR": (
+                SVR,
+                {"kernel": ["rbf"], "C": [0.5, 1.0]},
+            ),
+        }
+    else:
+        raise ValueError(f"Unknown mode: {mode}")
+
+    all_models = []
     for name_prefix, (model_class, param_grid) in param_grids.items():
-        all_regressors.extend(
+        all_models.extend(
             generate_regressor_grid(
                 model_class, param_grid, name_prefix=name_prefix
             )
         )
 
-    return all_regressors
+    return all_models
 
 
 def generate_regressor_grid(model_class, param_grid, name_prefix=None):
@@ -77,7 +121,7 @@ def generate_regressor_grid(model_class, param_grid, name_prefix=None):
 def evaluate_model(y_true, y_pred):
     """Calculate RMSE, MAE, and R2 metrics for model predictions."""
     return {
-        "RMSE": np.sqrt(mean_squared_error(y_true, y_pred)),
+        "RMSE": np.sqrt(root_mean_squared_error(y_true, y_pred)),
         "MAE": mean_absolute_error(y_true, y_pred),
         "R2": r2_score(y_true, y_pred),
     }
@@ -104,57 +148,62 @@ def get_model_feature_importance(pipeline, feature_names):
 
 def run_time_series_cv(
     df_train,
-    date_column,
-    target_column,
+    mode,
+    date_column="contract_date_dt",
+    target_column="target_price",
+    feature_set="all_features",
     n_splits=5,
     best_metric_name="MAE",
-    output_path=OUTPUT_PATH,
+    output_path=None,
 ):  # pylint: disable=too-many-locals, too-many-statements, too-many-arguments, too-many-positional-arguments, too-many-branches
     """
-    Perform time series cross-validation for multiple regression models with preprocessing.
+    Performs time series cross-validation with preprocessing, model selection, and evaluation.
 
-    :param df_train: Input dataset containing features, target, and date column
+    This function applies time-based cross-validation on a supervised regression task.
+    It builds model pipelines that include preprocessing for numerical and categorical features,
+    fits different model configurations, evaluates them across folds using specified metrics,
+    computes feature importance, and saves results if a path is provided.
+
+    :param df_train: Training DataFrame containing feature columns, target column, and a datetime
+                     column.
     :type df_train: pd.DataFrame
-    :param date_column: Column name representing the time order to split data for time series CV
+    :param mode: One of the following modes to define model selection logic:
+                 - "find best model": Test multiple model types and hyperparameters.
+                 - "best model feature ablation": Evaluate the best model on subsets of features.
+                 - "best model sensitivity analysis": Assess robustness of the best model by varying
+                    hyperparameters.
+    :type mode: str
+    :param date_column: Name of the datetime column used to sort records chronologically. Default
+                        is "contract_date_dt".
     :type date_column: str
-    :param target_column: Column name of the target variable to predict
+    :param target_column: Name of the target variable to predict. Default is "target_price".
     :type target_column: str
-    :param n_splits: Number of splits/folds for TimeSeriesSplit cross-validation, defaults to 5
-    :type n_splits: int, optional
-    :param best_metric_name: Metric name to select best model ('MAE' minimized, 'R2' maximized),
-                            defaults to 'MAE'
-    :type best_metric_name: str, optional
-    :return: The best fitted sklearn Pipeline
-    :rtype: sklearn.pipeline.Pipeline
+    :param feature_set: Set of features to use (e.g., "all_features", "primary_features").
+    :type feature_set: str
+    :param n_splits: Number of time-based splits for cross-validation. Default is 5.
+    :type n_splits: int
+    :param best_metric_name: Metric used to select the best model. Options are "RMSE" or "MAE"
+                         (lower is better), and "R2" (higher is better).
+    :type best_metric_name: str
+    :param output_path: Optional path to save the cross-validation results as a JSON file.
+    :type output_path: pathlib.Path or None
+
+    :return: Tuple of (best_pipeline, best_result), where:
+             - best_pipeline is the sklearn Pipeline object for the best-performing model.
+             - best_result is a dictionary with model name, hyperparameters, metrics, and feature
+             importance.
+    :rtype: tuple[sklearn.pipeline.Pipeline, dict]
     """
     logger.info("---Running Supervised Learning Cross-Validation\n")
 
-    configs = load_configs("features.yml")
-    cv_features = configs["cv_features"]
+    regressors = create_model_param_grid(mode)
 
-    num_features = (
-        cv_features["num_primary"]
-        + cv_features["num_amenities"]
-        + cv_features["num_ecosocial"]
-    )
-
-    cat_features = cv_features["cat_primary"]
-
-    num_features = [col for col in num_features if col in df_train.columns]
-    cat_features = [col for col in cat_features if col in df_train.columns]
-
-    regressors = build_regressors()
+    df_train = df_train.dropna(axis=1, how="all")
+    num_features, cat_features = load_features(df_train, feature_set)
 
     df_sorted = df_train.sort_values(date_column).copy()
     x_all = df_sorted.drop(columns=[target_column])
-
-    # Convert output from pd.cut into str
-    for col in cat_features:
-        if pd.api.types.is_categorical_dtype(x_all[col]) or isinstance(
-            x_all[col].dropna().iloc[0], pd.Interval
-        ):
-            x_all[col] = x_all[col].astype(str)
-
+    x_all = convert_interval_to_str(x_all, cat_features)
     y_all = df_sorted[target_column]
 
     tscv = TimeSeriesSplit(n_splits=n_splits)
@@ -166,7 +215,10 @@ def run_time_series_cv(
                 "num",
                 Pipeline(
                     [
-                        ("imputer", SimpleImputer(strategy="mean")),
+                        (
+                            "imputer",
+                            SimpleImputer(strategy="constant", fill_value=0),
+                        ),
                         ("scaler", MinMaxScaler()),
                     ]
                 ),
@@ -309,7 +361,8 @@ def run_time_series_cv(
         "best_metric_name": best_metric_name,
     }
 
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(cv_results, f, indent=4)
+    if output_path:
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(cv_results, f, indent=4)
 
-    return best_pipeline
+    return best_pipeline, best_result
