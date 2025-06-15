@@ -7,8 +7,6 @@ import json
 from dataclasses import dataclass
 import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
-import seaborn as sns
 from sklearn.metrics import mean_absolute_error
 from sklearn.base import clone, BaseEstimator
 from sklearn.compose import ColumnTransformer
@@ -205,12 +203,12 @@ def plot_ablation(diffs: dict, save_path: str = "./src/data/plot/ablation_additi
     plt.axvline(0, color="black", linestyle="--", linewidth=1)
     plt.xlabel("MAE Reduction After Adding Feature")
     plt.title("Top Feature Contributions (Additive Ablation Analysis)")
-    plt.gca().invert_yaxis()  
+    plt.gca().invert_yaxis()
 
-    for bar in bars:
-        width = bar.get_width()
-        plt.text(width + 1000 if width > 0 else width - 10000,  
-                 bar.get_y() + bar.get_height()/2,
+    for barx in bars:
+        width = barx.get_width()
+        plt.text(width + 1000 if width > 0 else width - 10000,
+                 barx.get_y() + barx.get_height()/2,
                  f"{width:,.0f}",
                  va='center', ha='right' if width < 0 else 'left',
                  fontsize=8, color="gray")

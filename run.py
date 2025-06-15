@@ -8,9 +8,9 @@ for downstream unsupervised and supervised learning tasks.
 import logging
 from pathlib import Path
 
+from src.analysis.ablation_analysis import perform_ablation_analysis
 from src.analysis.tsne_visualize import generate_plot_tsne_clusters
 from src.analysis.unsupervised_kmeans import perform_kmeans
-from src.analysis.ablation_analysis import perform_ablation_analysis
 from src.clean_google_data import clean_google_data
 from src.clean_prepare_cpi_data import clean_cpi_data, prepare_cpi_data
 from src.clean_prepare_marriage_data import (
@@ -180,6 +180,11 @@ def run_all(poi_type_list):
 
         feature_ablation_results.append(feature_ablation_result)
 
+    # Ablation analysis
+    perform_ablation_analysis(
+        best_pipeline, df_train, df_test, target_column="target_price"
+    )
+
     # --- Best model sensitivity analysis ---
     _, sensitivity_result = run_time_series_cv(
         df_train,
@@ -193,13 +198,13 @@ def run_all(poi_type_list):
         df_train,
         mode="best_model_single_param",
         feature_set="all_features",
+        n_splits=2,
     )
 
-    #perform_failure_analysis(best_pipeline, df_train, df_test, indices=[0, 1])
-
-    # Ablation analysis
-    perform_ablation_analysis(best_pipeline, df_train, df_test,
-       target_column="target_price")
+    idx_top_n_errors = [10137, 9583, 9589, 9585, 4576, 4549, 6700, 9536, 5411]
+    perform_failure_analysis(
+        best_pipeline, df_train, df_test, indices=idx_top_n_errors
+    )
 
     # TO-DO
     # Please see the “Tips for Project Report” video under “Week 6 Project Check-in”
