@@ -5,6 +5,18 @@ all_features:
   num_primary:
     - area
     - days_since_1st_trans
+    - st_lag_mean_30d_400m
+    - st_lag_mean_90d_400m
+    - st_lag_mean_180d_400m
+    - st_lag_mean_360d_400m
+    - st_lag_std_30d_400m
+    - st_lag_std_90d_400m
+    - st_lag_std_180d_400m
+    - st_lag_std_360d_400m
+    - st_neighbor_count_30d_400m
+    - st_neighbor_count_90d_400m
+    - st_neighbor_count_180d_400m
+    - st_neighbor_count_360d_400m
 
   num_amenities:
     - mrt_nearest_distance_m
@@ -66,6 +78,18 @@ primary_features:
   num_primary:
     - area
     - days_since_1st_trans
+    - st_lag_mean_30d_400m
+    - st_lag_mean_90d_400m
+    - st_lag_mean_180d_400m
+    - st_lag_mean_360d_400m
+    - st_lag_std_30d_400m
+    - st_lag_std_90d_400m
+    - st_lag_std_180d_400m
+    - st_lag_std_360d_400m
+    - st_neighbor_count_30d_400m
+    - st_neighbor_count_90d_400m
+    - st_neighbor_count_180d_400m
+    - st_neighbor_count_360d_400m
 
   cat_primary:
     - floorRange

@@ -36,6 +36,7 @@ from src.run_time_series_cv import run_time_series_cv
 from src.utils.secondary_ds_helper_functions import concat_and_filter_by_date
 from src.utils.spilt_time_series_train_test import split_time_series_train_test
 from src.utils.validate import validate_merge
+from src.derive_features import derive_st_lag
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -122,11 +123,12 @@ def prepare_merge_all_data(poi_type_list):
     df_merged_data = merge_ecosocial_data(df_merged_data, df_econ_data)
 
     df_merged_data = normalize_prices(df_merged_data)
+    df_merged_data_lagged = derive_st_lag(df_merged_data)
 
-    df_merged_data.to_csv(OUTPUT_PATHS["clean_merged_data"], index=False)
-    validate_merge(df_primary_data, df_merged_data, df_name="Merged Dataset")
+    df_merged_data_lagged.to_csv(OUTPUT_PATHS["clean_merged_data"], index=False)
+    validate_merge(df_primary_data, df_merged_data_lagged, df_name="Merged Dataset")
 
-    return df_merged_data
+    return df_merged_data_lagged
 
 
 def run_all(poi_type_list):
