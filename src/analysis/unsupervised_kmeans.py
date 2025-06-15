@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score
-
+from src.utils.load_configs import load_configs_file
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -41,11 +41,14 @@ def perform_kmeans(df_input : pd.DataFrame):
 
     df_kmeans = df_kmeans[df_kmeans["noOfUnits"] == 1]
     df_kmeans['tenure_bin'] = df_kmeans['tenure_bin'].replace('Freehold', '9999')
-    df_kmeans['tenure_bin'] = df_kmeans['tenure_bin'].str.replace(' yrs', '', regex=False)
+    df_kmeans['tenure_bin'] = df_kmeans['tenure_bin'].cat.rename_categories(
+        lambda x: x.replace(" yrs", "")
+    )
     df_kmeans['tenure_bin'] = pd.to_numeric(df_kmeans['tenure_bin'])
-    x = df_kmeans[["area", "tenure_bin",
-        "mrt_nearest_distance_m", "lrt_nearest_distance_m", "poi_count_restaurant",
-        "poi_count_school","poi_count_shopping_mall"]]
+    print("\n------------\n")
+    print(type(load_configs_file("features.yml")["kmeans_features"]))
+    print("\n------------\n")
+    x = df_kmeans[load_configs_file("features.yml")["kmeans_features"]]
     std_scaler = StandardScaler()
     x_scaled = std_scaler.fit_transform(x)
 

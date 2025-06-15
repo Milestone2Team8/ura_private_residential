@@ -65,6 +65,12 @@ ablation_features:
   - poi_count_hospital
   - poi_count_lodging
   - poi_count_police
+  - SORA
+  - cpi_accum
+  - cpi
+  - monthly_price_index
+  - age_bin
+  - tenure_bin
 
 # Ablated Feature Groups
 # --- Primary features only --- 
@@ -120,3 +126,13 @@ ecosocial_features:
     - SORA
     - cpi_accum
     - monthly_price_index
+
+# --- Kmeans Features ---
+kmeans_features:
+  - area
+  - tenure_bin
+  - mrt_nearest_distance_m
+  - lrt_nearest_distance_m
+  - poi_count_restaurant
+  - poi_count_school
+  - poi_count_shopping_mall
