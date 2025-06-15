@@ -195,7 +195,7 @@ def run_all(poi_type_list):
         feature_set="all_features",
     )
 
-    perform_failure_analysis(best_pipeline, df_train, df_test, indices=[0, 1])
+    #perform_failure_analysis(best_pipeline, df_train, df_test, indices=[0, 1])
 
     # Ablation analysis
     perform_ablation_analysis(best_pipeline, df_train, df_test,

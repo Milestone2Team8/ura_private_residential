@@ -7,6 +7,8 @@ import json
 from dataclasses import dataclass
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
+import seaborn as sns
 from sklearn.metrics import mean_absolute_error
 from sklearn.base import clone, BaseEstimator
 from sklearn.compose import ColumnTransformer
@@ -144,6 +146,79 @@ def _evaluate_with_added_feature(inputs: AblationInput) -> float:
     preds = model_pipeline.predict(x_test)
     return mean_absolute_error(inputs.data.y_test, preds)
 
+def extract_top_features_from_importance(path: str,
+    top_k: int = 10) -> tuple[list[str], list[str]]:
+    """
+    Extract top unique feature names.
+
+    :param path: Path to the JSON file.
+    :type path: str
+    :param top_k: Number of top unique features based on importance score.
+    :type top_k: int
+    :return: Tuple containing two lists — top numeric and top categorical 
+    :rtype: tuple[list[str], list[str]]
+    """
+    with open(path, "r", encoding="utf-8") as f:
+        feature_importance = json.load(f)["best_model"]["feature_importance"]
+
+    sorted_features = sorted(feature_importance.items(), key=lambda x: x[1], reverse=True)
+
+    seen = set()
+    top_features = []
+
+    for full_name, _ in sorted_features:
+        if full_name.startswith("num__"):
+            name = full_name.split("__", 1)[1]
+        elif full_name.startswith("cat__"):
+            name = full_name.split("__", 1)[1].split("_", 1)[0]
+        else:
+            continue
+
+        if name not in seen:
+            seen.add(name)
+            top_features.append((full_name, name))
+
+        if len(top_features) == top_k:
+            break
+
+    num_features = [name for full_name, name in top_features if full_name.startswith("num__")]
+    cat_features = [name for full_name, name in top_features if full_name.startswith("cat__")]
+
+    return num_features, cat_features
+
+
+def plot_ablation(diffs: dict, save_path: str = "./src/data/plot/ablation_additive_analysis.png"):
+    """
+    Plot chart to visualize feature ablation effects.
+
+    :param diffs: Dictionary mapping feature name
+    :type diffs: dict[str, float]
+    :param save_path: Path to save the generated plot image
+    :type save_path: str
+    """
+    diffs_sorted = dict(sorted(diffs.items(), key=lambda item: item[1], reverse=True))
+    features = list(diffs_sorted.keys())
+    reductions = list(diffs_sorted.values())
+
+    plt.figure(figsize=(10, 6))
+    bars = plt.barh(features, reductions, color='skyblue')
+    plt.axvline(0, color="black", linestyle="--", linewidth=1)
+    plt.xlabel("MAE Reduction After Adding Feature")
+    plt.title("Top Feature Contributions (Additive Ablation Analysis)")
+    plt.gca().invert_yaxis()  
+
+    for bar in bars:
+        width = bar.get_width()
+        plt.text(width + 1000 if width > 0 else width - 10000,  
+                 bar.get_y() + bar.get_height()/2,
+                 f"{width:,.0f}",
+                 va='center', ha='right' if width < 0 else 'left',
+                 fontsize=8, color="gray")
+
+    plt.tight_layout()
+    plt.savefig(save_path)
+    logger.info("Ablation analysis plot saved: %s", save_path)
+
 
 def perform_ablation_analysis(best_model_pipeline, df_input_train,
         df_input_test, target_column="target_price"):
@@ -166,9 +241,13 @@ def perform_ablation_analysis(best_model_pipeline, df_input_train,
     )
     logger.info("Loaded baseline MAE: %.4f", baseline_mae)
 
-    num_features = best_model_pipeline.named_steps["preprocessing"].transformers_[0][2]
-    cat_features = best_model_pipeline.named_steps["preprocessing"].transformers_[1][2]
+    num_features, cat_features = extract_top_features_from_importance(
+    "./src/data/output/all_models_features_results.json"
+    )
+
     addable = [f for f in all_ablation_features if f not in set(num_features + cat_features)]
+    logger.info("Top 10 features: %s and %s", num_features, cat_features)
+
     logger.info("Features to be added: %s", addable)
 
     df_input_train = df_input_train.sort_values("contract_date_dt").copy()
@@ -193,11 +272,4 @@ def perform_ablation_analysis(best_model_pipeline, df_input_train,
         results[feature] = _evaluate_with_added_feature(inputs)
 
     diffs = {k: baseline_mae - v for k, v in results.items()}
-    plt.figure(figsize=(10, 6))
-    plt.barh(list(diffs.keys()), list(diffs.values()))
-    plt.axvline(0, color="black", linestyle="--")
-    plt.xlabel("MAE Reduction After Adding Feature")
-    plt.title("Feature Additive Ablation Analysis")
-    plt.tight_layout()
-    plt.savefig("./src/data/plot/ablation_additive_analysis.png")
-    logger.info("Ablation analysis plot saved.")
+    plot_ablation(diffs)
