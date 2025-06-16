@@ -48,8 +48,7 @@ def generate_plot_tsne_clusters(df_input: pd.DataFrame, x_scaled: np.ndarray, cl
     df_vis = df_input.copy()
     df_sampled = sample_clusters_data(df_vis, cluster_col="cluster", samples_per_cluster=100)
     x_scaled_sampled = x_scaled[df_sampled.index]
-    cluster_count = min(cluster_count, 3)
-    tsne = TSNE(n_components=cluster_count, random_state=42, perplexity=30)
+    tsne = TSNE(n_components=2, random_state=42, perplexity=30)
     x_embedded = tsne.fit_transform(x_scaled_sampled)
 
     df_sampled["market_x"] = x_embedded[:, 0]
