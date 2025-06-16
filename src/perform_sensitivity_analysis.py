@@ -36,7 +36,8 @@ def perform_sensitivity_analysis(sensitivity_result, metric="MAE"):
     :param sensitivity_result: Dictionary of fold-wise evaluation results returned from
                                run_time_series_cv(..., all_scores=True).
     :type sensitivity_result: dict
-    :param metric: Evaluation metric to plot. Default is "MAE". Options include "RMSE", "MAE", or "R2".
+    :param metric: Evaluation metric to plot. Default is "MAE". Options 
+    include "RMSE", "MAE", or "R2".
     :type metric: str
 
     :return: None. The function saves the resulting plot to OUTPUT_PATH.
