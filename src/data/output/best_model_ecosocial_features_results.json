@@ -40,8 +40,8 @@
             "feature_importance": {
                 "num__monthly_population_growth_rate": 0.025726199641708296,
                 "num__monthly_marriage_crude_rate": 0.013142759718812225,
-                "num__SORA": 0.13133909950970166,
-                "num__cpi_accum": 0.20562515222456906,
+                "num__SORA": 0.13133909950970155,
+                "num__cpi_accum": 0.20562515222456926,
                 "num__monthly_price_index": 0.6241667889052087
             }
         }
@@ -86,8 +86,8 @@
         "feature_importance": {
             "num__monthly_population_growth_rate": 0.025726199641708296,
             "num__monthly_marriage_crude_rate": 0.013142759718812225,
-            "num__SORA": 0.13133909950970166,
-            "num__cpi_accum": 0.20562515222456906,
+            "num__SORA": 0.13133909950970155,
+            "num__cpi_accum": 0.20562515222456926,
             "num__monthly_price_index": 0.6241667889052087
         }
     },
