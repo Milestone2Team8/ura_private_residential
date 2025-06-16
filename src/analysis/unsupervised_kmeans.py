@@ -45,9 +45,6 @@ def perform_kmeans(df_input : pd.DataFrame):
         lambda x: x.replace(" yrs", "")
     )
     df_kmeans['tenure_bin'] = pd.to_numeric(df_kmeans['tenure_bin'])
-    print("\n------------\n")
-    print(type(load_configs_file("features.yml")["kmeans_features"]))
-    print("\n------------\n")
     x = df_kmeans[load_configs_file("features.yml")["kmeans_features"]]
     std_scaler = StandardScaler()
     x_scaled = std_scaler.fit_transform(x)

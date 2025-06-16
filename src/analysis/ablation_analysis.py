@@ -4,6 +4,7 @@ Ablation analysis function and identify feature importance
 
 import logging
 import json
+import seaborn as sns
 from dataclasses import dataclass
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -195,27 +196,18 @@ def plot_ablation(diffs: dict, save_path: str = "./src/data/plot/ablation_additi
     :type save_path: str
     """
     diffs_sorted = dict(sorted(diffs.items(), key=lambda item: item[1], reverse=True))
-    features = list(diffs_sorted.keys())
-    reductions = list(diffs_sorted.values())
+    df_plot = pd.DataFrame({
+    "feature": list(diffs_sorted.keys()),
+    "mae_reduction": list(diffs_sorted.values())
+    })
 
     plt.figure(figsize=(10, 6))
-    bars = plt.barh(features, reductions, color='skyblue')
-    plt.axvline(0, color="black", linestyle="--", linewidth=1)
+    sns.stripplot(data=df_plot, x="mae_reduction", y="feature", jitter=True, palette="coolwarm", size=10)
+    plt.axvline(0, linestyle='--', color='black')
     plt.xlabel("MAE Reduction After Adding Feature")
-    plt.title("Top Feature Contributions (Additive Ablation Analysis)")
-    plt.gca().invert_yaxis()
-
-    for barx in bars:
-        width = barx.get_width()
-        plt.text(width + 1000 if width > 0 else width - 10000,
-                 barx.get_y() + barx.get_height()/2,
-                 f"{width:,.0f}",
-                 va='center', ha='right' if width < 0 else 'left',
-                 fontsize=8, color="gray")
-
+    plt.title("Feature Additive Ablation Analysis")
     plt.tight_layout()
     plt.savefig(save_path)
-    logger.info("Ablation analysis plot saved: %s", save_path)
 
 
 def perform_ablation_analysis(best_model_pipeline, df_input_train,
