@@ -22,8 +22,7 @@ def perform_kmeans(df_input : pd.DataFrame):
     :param df_input: dataframe to be processed
     :type df_input: pd.Dataframe
     :return: Tuple of updated DataFrame with cluster labels, scaled feature matrix
-    and best no of clusters
-    :rtype: Tuple[pd.DataFrame, np.ndarray, int]
+    :rtype: Tuple[pd.DataFrame, np.ndarray]
     """
 
     cluster_colors = {
@@ -102,4 +101,4 @@ def perform_kmeans(df_input : pd.DataFrame):
 
     m.save("./src/data/plot/kmeans_Singapore.html")
     logger.info("Unsupervised Learning Step 3:Singapore map showing condo clusters saved.")
-    return df_kmeans, x_scaled, best_no_of_cluster
+    return df_kmeans, x_scaled

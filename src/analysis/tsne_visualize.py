@@ -33,7 +33,7 @@ def sample_clusters_data(df_input, cluster_col="cluster", samples_per_cluster=50
     return sampled_df
 
 
-def generate_plot_tsne_clusters(df_input: pd.DataFrame, x_scaled: np.ndarray, cluster_count: int):
+def generate_plot_tsne_clusters(df_input: pd.DataFrame, x_scaled: np.ndarray):
     """
     Generates plot for condo clusters using t-SNE
 
@@ -41,8 +41,6 @@ def generate_plot_tsne_clusters(df_input: pd.DataFrame, x_scaled: np.ndarray, cl
     :type df_input: pd.Dataframe
     :param x_scaled: scaled feature matrix
     :type x_scaled: np.ndarray
-    :param cluster_count: best number of clusters
-    :type cluster_count: int
     """
     logger.info("Unsupervised Learning Step 4:Generating plot for condo clusters with t-SNE.")
     df_vis = df_input.copy()
