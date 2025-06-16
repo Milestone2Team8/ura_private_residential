@@ -4,8 +4,8 @@ Ablation analysis function and identify feature importance
 
 import logging
 import json
-import seaborn as sns
 from dataclasses import dataclass
+import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.metrics import mean_absolute_error
@@ -202,7 +202,8 @@ def plot_ablation(diffs: dict, save_path: str = "./src/data/plot/ablation_additi
     })
 
     plt.figure(figsize=(10, 6))
-    sns.stripplot(data=df_plot, x="mae_reduction", y="feature", jitter=True, palette="coolwarm", size=10)
+    sns.stripplot(data=df_plot, x="mae_reduction", y="feature",
+        jitter=True, palette="coolwarm", size=10)
     plt.axvline(0, linestyle='--', color='black')
     plt.xlabel("MAE Reduction After Adding Feature")
     plt.title("Feature Additive Ablation Analysis")

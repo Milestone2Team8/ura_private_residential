@@ -19,3 +19,4 @@ folium==0.19.6
 
 #Visualization
 matplotlib==3.8.4
+seaborn==0.13.2
