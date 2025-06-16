@@ -66,8 +66,8 @@ def create_model_param_grid(mode="find best model", random_state=RANDOM_STATE):
             "RF": (
                 RandomForestRegressor,
                 {
-                    "max_depth": [5, 15, 30, 35, 40],
-                    "random_state": [random_state],
+                    "max_depth": [5, 15, 30, 35, 40, 60],
+                    "random_state": [random_state]
                 },
             )
         }
@@ -155,6 +155,7 @@ def run_time_series_cv(
     n_splits=5,
     best_metric_name="MAE",
     output_path=None,
+    all_scores=False
 ):  # pylint: disable=too-many-locals, too-many-statements, too-many-arguments, too-many-positional-arguments, too-many-branches
     """
     Performs time series cross-validation with preprocessing, model selection, and evaluation.
@@ -187,6 +188,8 @@ def run_time_series_cv(
     :type best_metric_name: str
     :param output_path: Optional path to save the cross-validation results as a JSON file.
     :type output_path: pathlib.Path or None
+    :param all_scores: Optional toggle to return all cv train test scores
+    :type all_scores: Bool
 
     :return: Tuple of (best_pipeline, best_result), where:
              - best_pipeline is the sklearn Pipeline object for the best-performing model.
@@ -250,9 +253,11 @@ def run_time_series_cv(
 
     best_pipeline = None
     best_score = None
+    sensitivity_metrics = {}
 
     for model_name, regressor in regressors:
         fold_metrics = []
+        fold_metrics_train = []
         importances_all_folds = []
         for _, (train_idx, val_idx) in enumerate(tscv.split(x_all)):
             x_train = x_all.iloc[train_idx][num_features + cat_features]
@@ -265,10 +270,14 @@ def run_time_series_cv(
             )
 
             pipeline.fit(x_train, y_train)
-            y_pred = pipeline.predict(x_val)
 
+            y_pred = pipeline.predict(x_val)
             metrics = evaluate_model(y_val, y_pred)
             fold_metrics.append(metrics)
+
+            y_pred_train = pipeline.predict(x_train)
+            metrics_train = evaluate_model(y_train, y_pred_train)
+            fold_metrics_train.append(metrics_train)
 
             # Get feature names after transformation
             feature_names = []
@@ -292,6 +301,8 @@ def run_time_series_cv(
             for k in fold_metrics[0]
         }
         all_metrics = {**avg_metrics, **std_metrics}
+
+        sensitivity_metrics[model_name] = {'train':fold_metrics_train, 'test':fold_metrics}
 
         current_metric = avg_metrics[best_metric_name]
         if best_score is None or (
@@ -364,5 +375,8 @@ def run_time_series_cv(
     if output_path:
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(cv_results, f, indent=4)
+
+    if all_scores:
+        return best_pipeline, sensitivity_metrics
 
     return best_pipeline, best_result
