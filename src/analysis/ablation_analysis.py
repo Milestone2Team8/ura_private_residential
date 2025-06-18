@@ -236,19 +236,24 @@ def perform_ablation_analysis(best_model_pipeline, df_input_train,
     "./src/data/output/all_models_features_results.json"
     )
 
-    addable = [f for f in all_ablation_features if f not in set(num_features + cat_features)]
+    #addable = [f for f in all_ablation_features if f not in set(num_features + cat_features)]
+    addable = list(num_features + cat_features)
+
+    logger.info("Ablation features in yml: %s", all_ablation_features)
+
     logger.info("Top 10 features: %s and %s", num_features, cat_features)
 
     logger.info("Features to be added: %s", addable)
-
+    num_features = []
+    cat_features = []
     df_input_train = df_input_train.sort_values("contract_date_dt").copy()
     df_input_test = df_input_test.sort_values("contract_date_dt").copy()
 
     x_train_base = df_input_train.drop(columns=[target_column])
     x_test_base = df_input_test.drop(columns=[target_column])
 
-    x_train_base = _convert_categoricals_as_str(x_train_base, cat_features + addable)
-    x_test_base = _convert_categoricals_as_str(x_test_base, cat_features + addable)
+    x_train_base = _convert_categoricals_as_str(x_train_base, addable)
+    x_test_base = _convert_categoricals_as_str(x_test_base, addable)
 
     results = {}
     for feature in addable:
