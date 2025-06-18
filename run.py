@@ -192,7 +192,7 @@ def run_all(poi_type_list):
         mode="best_model_multi_params",
         feature_set="all_features",
         output_path=OUTPUT_PATHS["sensitivity_results"],
-        all_scores=True
+        all_scores=True,
     )
 
     perform_sensitivity_analysis(sensitivity_result, metric="MAE")

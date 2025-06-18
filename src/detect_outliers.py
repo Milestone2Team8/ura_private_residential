@@ -15,7 +15,7 @@ from pyod.models.iforest import IForest
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 
 from src.utils.custom_distance_metric import gower_distances
 from src.utils.load_configs import load_features
@@ -30,9 +30,51 @@ OUTPUT_PATHS = {
 }
 
 DETECTORS = {
-    "IForest": IForest(random_state=RANDOM_STATE),
-    "AutoEncoder": AutoEncoder(random_state=RANDOM_STATE),
+    "IForest1": IForest(n_estimators=50, random_state=RANDOM_STATE),
+    "IForest2": IForest(n_estimators=100, random_state=RANDOM_STATE),
+    "IForest3": IForest(n_estimators=200, random_state=RANDOM_STATE),
+    "IForest4": IForest(n_estimators=300, random_state=RANDOM_STATE),
+    "AutoEncoder1": AutoEncoder(
+        hidden_neuron_list=[64, 32],
+        epoch_num=10,
+        preprocessing=False,
+        random_state=RANDOM_STATE,
+    ),
+    "AutoEncoder2": AutoEncoder(
+        hidden_neuron_list=[64, 32],
+        epoch_num=20,
+        preprocessing=False,
+        random_state=RANDOM_STATE,
+    ),
+    "AutoEncoder3": AutoEncoder(
+        hidden_neuron_list=[128, 64, 32],
+        epoch_num=10,
+        preprocessing=False,
+        random_state=RANDOM_STATE,
+    ),
+    "AutoEncoder4": AutoEncoder(
+        hidden_neuron_list=[128, 64, 32],
+        epoch_num=20,
+        preprocessing=False,
+        random_state=RANDOM_STATE,
+    ),
 }
+
+BEST_DETECTOR = {
+    "IForest31": IForest(
+        n_estimators=200, max_features=1, random_state=RANDOM_STATE
+    ),
+    "IForest32": IForest(
+        n_estimators=200, max_features=2, random_state=RANDOM_STATE
+    ),
+    "IForest33": IForest(
+        n_estimators=200, max_features=3, random_state=RANDOM_STATE
+    ),
+    "IForest34": IForest(
+        n_estimators=200, max_features=4, random_state=RANDOM_STATE
+    ),
+}
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -77,7 +119,7 @@ def process_outliers_data(
         ]
     )
     num_transformer = Pipeline(
-        steps=[("imputer", num_imputer), ("scaler", StandardScaler())]
+        steps=[("imputer", num_imputer), ("scaler", MinMaxScaler())]
     )
 
     preprocessor = ColumnTransformer(
@@ -201,7 +243,9 @@ def plot_outliers_umap(
 
 
 def detect_outliers_generate_plots(
-    df_ura, detectors=None, output_path=OUTPUT_PATHS["clean_merged_outliers"]
+    df_ura,
+    detectors=None,
+    output_path=OUTPUT_PATHS["clean_merged_outliers"],
 ):
     """
     Detect outliers in the provided URA property DataFrame using multiple detectors,
@@ -257,8 +301,8 @@ def detect_outliers_generate_plots(
         df_copy,
         score_cols=score_cols,
         label_cols=label_cols,
-        top_n_outliers=10,
-        total_sample_size=150,
+        top_n_outliers=20,
+        total_sample_size=220,
     )
 
     for label_col, df_outliers_sample in df_outliers_samples.items():
