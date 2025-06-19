@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+# pylint: disable=too-many-locals
+
 def extract_params(label):
     """
     Extracts max_depth and min_samples_leaf from model
@@ -20,7 +22,7 @@ def extract_params(label):
 def plot_sensitivity_2d(
     sensitivity_result, metric="MAE",
     fixed_param="max_depth", fixed_value=10
-): # pylint: disable=too-many-locals
+):
     """
     Plots train/test metric means and std bands vs the varying hyperparameter,
     fixing either max_depth or min_samples_leaf to a constant value.
