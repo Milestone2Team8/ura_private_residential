@@ -66,10 +66,8 @@ def create_model_param_grid(mode="find best model", random_state=RANDOM_STATE):
             "RF": (
                 RandomForestRegressor,
                 {
-                    "max_depth": [5, 15, 30, 40, 50],
-                    "random_state": [random_state],
-                    "min_samples_leaf" : [1, 5, 10, 20, 30],
-                    "n_estimators" : [200]
+                    "max_depth": [5, 15, 30, 35, 40, 60],
+                    "random_state": [random_state]
                 },
             )
         }

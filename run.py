@@ -34,8 +34,7 @@ from src.merge_ura_amenities import merge_amenities_data
 from src.merge_ura_ecosocial import merge_ecosocial_data
 from src.normalize_sale_price import normalize_prices
 from src.perform_failure_analysis import perform_failure_analysis
-from src.perform_sensitivity_analysis import plot_sensitivity_2d
-from src.perform_sensitivity_analysis import plot_sensitivity_3d
+from src.perform_sensitivity_analysis import perform_sensitivity_analysis
 from src.run_time_series_cv import run_time_series_cv
 from src.utils.secondary_ds_helper_functions import concat_and_filter_by_date
 from src.utils.spilt_time_series_train_test import split_time_series_train_test
@@ -196,9 +195,7 @@ def run_all(poi_type_list):
         all_scores=True,
     )
 
-    plot_sensitivity_2d(sensitivity_result, metric = "MAE", fixed_param = "min_samples_leaf", fixed_value = 5)
-    plot_sensitivity_2d(sensitivity_result, metric = "MAE", fixed_param = "max_depth", fixed_value = 15)
-    plot_sensitivity_3d(sensitivity_result, metric = "MAE", fold_idx = -1)
+    perform_sensitivity_analysis(sensitivity_result, metric="MAE")
 
     # --- Best model failure analysis ---
     best_pipeline, _ = run_time_series_cv(
