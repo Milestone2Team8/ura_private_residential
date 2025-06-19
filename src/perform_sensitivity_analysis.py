@@ -18,9 +18,9 @@ def extract_params(label):
     return max_depth, min_leaf
 
 def plot_sensitivity_2d(
-        sensitivity_result, metric="MAE",
-        fixed_param="max_depth", fixed_value=10
-        ): # pylint: disable=too-many-locals
+    sensitivity_result, metric="MAE",
+    fixed_param="max_depth", fixed_value=10
+): # pylint: disable=too-many-locals
     """
     Plots train/test metric means and std bands vs the varying hyperparameter,
     fixing either max_depth or min_samples_leaf to a constant value.
@@ -42,7 +42,7 @@ def plot_sensitivity_2d(
             continue
 
         varying_val = min_leaf if fixed_param == "max_depth" else max_depth
-    
+
         train_scores = [fold[metric] for fold in data["train"]]
         test_scores = [fold[metric] for fold in data["test"]]
 
