@@ -9,7 +9,9 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score
+from sklearn.preprocessing import LabelEncoder
 from src.utils.load_configs import load_configs_file
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -30,23 +32,26 @@ def perform_kmeans(df_input : pd.DataFrame):
         1: "yellow",
         2: "red",
         3: "blue",
-        4: "black",
-        5: "brown",
-        6: "orange",
-        7: "purple"
+        4: "black"
     }
     logger.info("Unsupervised Learning Step 1:Generating elbow chart for kmeans.")
     df_kmeans = df_input.copy()
 
     df_kmeans = df_kmeans[df_kmeans["noOfUnits"] == 1]
-    df_kmeans['tenure_bin'] = df_kmeans['tenure_bin'].replace('Freehold', '9999')
+    df_kmeans['tenure_bin'] = df_kmeans['tenure_bin'].cat.rename_categories(
+        lambda x: '9999' if x == 'Freehold' else x
+    )
     df_kmeans['tenure_bin'] = df_kmeans['tenure_bin'].cat.rename_categories(
         lambda x: x.replace(" yrs", "")
     )
     df_kmeans['tenure_bin'] = pd.to_numeric(df_kmeans['tenure_bin'])
-    x = df_kmeans[load_configs_file("features.yml")["kmeans_features"]]
-    std_scaler = StandardScaler()
-    x_scaled = std_scaler.fit_transform(x)
+    df_kmeans['marketSegment'] = LabelEncoder().fit_transform(df_kmeans['marketSegment'])
+    df_kmeans['typeOfSale'] = LabelEncoder().fit_transform(df_kmeans['typeOfSale'])
+    feature_columns = load_configs_file("features.yml")["kmeans_features"]
+    df_kmeans = df_kmeans.dropna(subset=feature_columns)
+    x = df_kmeans[feature_columns]
+
+    x_scaled = StandardScaler().fit_transform(x)
 
     i = []
     max_cluster = 10
