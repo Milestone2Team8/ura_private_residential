@@ -43,6 +43,18 @@ def generate_plot_tsne_clusters(df_input: pd.DataFrame, x_scaled: np.ndarray):
     :type x_scaled: np.ndarray
     """
     logger.info("Unsupervised Learning Step 4:Generating plot for condo clusters with t-SNE.")
+
+    tnse_colors = {
+        0: "green",
+        1: "yellow",
+        2: "red",
+        3: "blue",
+        4: "black",
+        5: "brown",
+        6: "orange",
+        7: "purple"
+    }
+
     df_vis = df_input.copy()
     #df_sampled = sample_clusters_data(df_vis, cluster_col="cluster", samples_per_cluster=100)
     #x_scaled_sampled = x_scaled[df_sampled.index]
@@ -53,10 +65,11 @@ def generate_plot_tsne_clusters(df_input: pd.DataFrame, x_scaled: np.ndarray):
 
     df_sampled["market_x"] = x_embedded[:, 0]
     df_sampled["market_y"] = x_embedded[:, 1]
+    df_sampled["color"] = df_sampled["cluster"].map(tnse_colors)
 
     plt.figure(figsize=(10, 6))
-    plt.scatter(df_sampled["market_x"], df_sampled["market_y"], c=df_sampled["cluster"],
-        cmap="viridis", alpha=0.6)
+    plt.scatter(df_sampled["market_x"], df_sampled["market_y"],
+        c=df_sampled["color"], alpha=0.6)
     plt.title("Condo clusters visualized with t-SNE")
     plt.xlabel("t-SNE Dim 1")
     plt.ylabel("t-SNE Dim 2")

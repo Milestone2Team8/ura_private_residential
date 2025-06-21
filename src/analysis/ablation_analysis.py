@@ -182,7 +182,6 @@ def extract_top_features_from_importance(path: str,
 
     num_features = [name for full_name, name in top_features if full_name.startswith("num__")]
     cat_features = [name for full_name, name in top_features if full_name.startswith("cat__")]
-
     return num_features, cat_features
 
 

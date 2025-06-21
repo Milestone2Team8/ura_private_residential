@@ -130,9 +130,10 @@ ecosocial_features:
 # --- Kmeans Features ---
 kmeans_features:
   - area
-  - tenure_bin
-  - mrt_nearest_distance_m
   - lrt_nearest_distance_m
-  - poi_count_restaurant
-  - poi_count_school
+  - mrt_nearest_distance_m
   - poi_count_shopping_mall
+  - poi_count_restaurant
+  - poi_count_police
+  - poi_count_school
+  - tenure_bin
