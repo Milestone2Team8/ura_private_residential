@@ -68,8 +68,8 @@ def create_model_param_grid(mode="find best model", random_state=RANDOM_STATE):
                 {
                     "max_depth": [5, 15, 30, 40, 50],
                     "random_state": [random_state],
-                    "min_samples_leaf" : [1, 5, 10, 20, 30],
-                    "n_estimators" : [200]
+                    "min_samples_leaf": [1, 5, 10, 20, 30],
+                    "n_estimators": [200],
                 },
             )
         }
@@ -89,7 +89,7 @@ def create_model_param_grid(mode="find best model", random_state=RANDOM_STATE):
             ),
             "SVR": (
                 SVR,
-                {"kernel": ["rbf"], "C": [0.5, 1.0]},
+                {"kernel": ["rbf"], "C": [0.1, 0.5, 1.0]},
             ),
         }
     else:
@@ -157,7 +157,7 @@ def run_time_series_cv(
     n_splits=5,
     best_metric_name="MAE",
     output_path=None,
-    all_scores=False
+    all_scores=False,
 ):  # pylint: disable=too-many-locals, too-many-statements, too-many-arguments, too-many-positional-arguments, too-many-branches
     """
     Performs time series cross-validation with preprocessing, model selection, and evaluation.
@@ -304,7 +304,10 @@ def run_time_series_cv(
         }
         all_metrics = {**avg_metrics, **std_metrics}
 
-        sensitivity_metrics[model_name] = {'train':fold_metrics_train, 'test':fold_metrics}
+        sensitivity_metrics[model_name] = {
+            "train": fold_metrics_train,
+            "test": fold_metrics,
+        }
 
         current_metric = avg_metrics[best_metric_name]
         if best_score is None or (

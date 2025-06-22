@@ -223,7 +223,7 @@ def clean_ura_data(
         new_col="contract_date_dt",
     )
 
-    # Get most recent three years
+    # Get most recent five years
     df_processed = df_processed[
         (df_processed["contract_date_dt"] >= "2020-05-01")
         & (df_processed["contract_date_dt"] <= "2025-05-01")
