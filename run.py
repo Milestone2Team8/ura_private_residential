@@ -34,8 +34,10 @@ from src.merge_ura_amenities import merge_amenities_data
 from src.merge_ura_ecosocial import merge_ecosocial_data
 from src.normalize_sale_price import normalize_prices
 from src.perform_failure_analysis import perform_failure_analysis
-from src.perform_sensitivity_analysis import plot_sensitivity_2d
-from src.perform_sensitivity_analysis import plot_sensitivity_3d
+from src.perform_sensitivity_analysis import (
+    plot_sensitivity_2d,
+    plot_sensitivity_3d,
+)
 from src.run_time_series_cv import run_time_series_cv
 from src.utils.secondary_ds_helper_functions import concat_and_filter_by_date
 from src.utils.spilt_time_series_train_test import split_time_series_train_test
@@ -158,14 +160,18 @@ def run_all(poi_type_list):
     df_train, df_test = split_time_series_train_test(df_single_trans)
 
     # --- All models and features ---
+    logger.info("---Running Best Model Cross Validation")
     best_pipeline, best_result = run_time_series_cv(
         df_train,
         mode="find_best_model",
         feature_set="all_features",
         output_path=OUTPUT_PATHS["all_models_results"],
     )
+    logger.info("Completed Best Model Cross Validation\n")
 
     # --- Best model feature ablation analysis ---
+    logger.info("---Running Feature Ablation Analysis")
+    # Set ablation analysis
     feature_ablation_results = []
 
     for feature_set in [
@@ -182,12 +188,14 @@ def run_all(poi_type_list):
 
         feature_ablation_results.append(feature_ablation_result)
 
-    # Ablation analysis
+    # Additive ablation analysis
     perform_ablation_analysis(
         best_pipeline, df_train, df_test, target_column="target_price"
     )
+    logger.info("Completed Feature Ablation Analysis\n")
 
     # --- Best model sensitivity analysis ---
+    logger.info("---Running Sensitivity Analysis")
     _, sensitivity_result = run_time_series_cv(
         df_train,
         mode="best_model_multi_params",
@@ -196,48 +204,37 @@ def run_all(poi_type_list):
         all_scores=True,
     )
 
-    plot_sensitivity_2d(sensitivity_result, metric = "MAE",
-                        fixed_param = "min_samples_leaf", fixed_value = 5)
-    plot_sensitivity_2d(sensitivity_result, metric = "MAE",
-                        fixed_param = "max_depth", fixed_value = 15)
-    plot_sensitivity_3d(sensitivity_result, metric = "MAE",
-                        fold_idx = -1)
+    plot_sensitivity_2d(
+        sensitivity_result,
+        metric="MAE",
+        fixed_param="min_samples_leaf",
+        fixed_value=5,
+    )
+    plot_sensitivity_2d(
+        sensitivity_result,
+        metric="MAE",
+        fixed_param="max_depth",
+        fixed_value=15,
+    )
+    plot_sensitivity_3d(sensitivity_result, metric="MAE", fold_idx=-1)
+    logger.info("Completed Sensitivity Analysis\n")
 
     # --- Best model failure analysis ---
-    best_pipeline, _ = run_time_series_cv(
-        df_train,
-        mode="best_model_single_param",
-        feature_set="all_features",
-        n_splits=2,
-    )
-
-    idx_top_n_errors = [10137, 9583, 9589, 9585, 4576, 4549, 6700, 9536, 5411]
+    idx_top_n_errors = [
+        10137,
+        9583,
+        9589,
+        9585,
+        4576,
+        4549,
+        6700,
+        9536,
+        5411,
+        4306,
+    ]
     perform_failure_analysis(
         best_pipeline, df_train, df_test, indices=idx_top_n_errors
     )
-
-    # TO-DO
-    # Please see the “Tips for Project Report” video under “Week 6 Project Check-in”
-
-    # (6 points) Do a feature importance and ablation analysis on your best model to
-    # get insight into which features are or are not contributing to prediction success/failure.
-    # Jerome: The best_model_pipeline can be used to perform .fit on df_train and .predict on
-    # test. to experiment with the different feature sets (e.g. primary data, amenities data
-    # and econ data).
-
-    # (4 points) Do at least one sensitivity analysis on your best model: How sensitive are your
-    # results to choice of (hyper-)parameters, features, or other varying solution elements?
-    # Jerome: Using the best model settings saved under .\data\output\csv_results.json, choose one
-    # hyperparameter to analysis and plot the validation curve. See video under Supervised Learning
-    # Week 2 - Cross Validation 6:58 min on how to plot the curve. Note: The best_model_pipeline
-    # cannot be reused directly because hyperparameter experimentation is still needed.
-
-    # Failure analysis (5 points)
-    # Select at least 3 *specific* examples (records) where prediction failed, and analyze
-    # possible reasons why.
-    # Ideally you should be able to identify at least three different categories of failure.
-    # What future improvements might fix the failures?
-    # Jerome: Predict df_test using the best_model_pipeline and conduct analysis.
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@
 Module for training models, predicting, and explaining results with SHAP plots.
 """
 
+import logging
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -10,6 +11,9 @@ import shap
 
 from src.utils.convert_interval_to_str import convert_interval_to_str
 from src.utils.load_configs import load_features
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 OUTPUT_PATHS = {
     "test_results_raw": Path("./src/data/output/test_results_raw.csv"),
@@ -82,6 +86,8 @@ def explain_prediction_waterfall(
     df_x_test_processed.to_csv(OUTPUT_PATHS["test_results_trans"], index=True)
 
     for i, idx in enumerate(indices):
+        plt.close("all")
+        plt.figure()
         shap.plots.waterfall(shap_values[i], show=False)
         output_path = OUTPUT_PATHS["shap_plot_dir"] / f"{prefix}_{idx}.png"
         plt.tight_layout()
@@ -105,7 +111,7 @@ def plot_mean_abs_error_by_district_line(
     output_path = (
         OUTPUT_PATHS["shap_plot_dir"] / "mean_abs_error_by_district.png"
     )
-
+    plt.close("all")
     plt.figure(figsize=(12, 6))
     mean_error_by_district.plot(kind="line", marker="o")
     plt.title("Mean Absolute Error by District", fontweight="bold")
@@ -120,6 +126,7 @@ def plot_mean_abs_error_by_district_line(
     plt.grid(True)
     plt.tight_layout()
     plt.savefig(output_path, bbox_inches="tight")
+    plt.close("all")
 
 
 def perform_failure_analysis(model_pipeline, df_train, df_test, indices):
@@ -139,6 +146,7 @@ def perform_failure_analysis(model_pipeline, df_train, df_test, indices):
     :param indices: List of row indices in the test set for which to generate SHAP plots.
     :type indices: list[int]
     """
+    logger.info("---Running Failure Analysis")
     df_test, fitted_model_pipeline = train_predict(
         model_pipeline, df_train, df_test
     )
@@ -148,3 +156,4 @@ def perform_failure_analysis(model_pipeline, df_train, df_test, indices):
     )
 
     plot_mean_abs_error_by_district_line(df_test)
+    logger.info("Failure Analysis Completed")
