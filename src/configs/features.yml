@@ -60,18 +60,6 @@ outliers_features:
   cat_features:
   - marketSegment
 
-# Features for ablation analysis add on
-ablation_features:
-  - poi_count_hospital
-  - poi_count_lodging
-  - poi_count_police
-  - SORA
-  - cpi_accum
-  - cpi
-  - monthly_price_index
-  - age_bin
-  - tenure_bin
-
 # Ablated Feature Groups
 # --- Primary features only --- 
 primary_features:
