@@ -14,10 +14,10 @@ from sklearn.compose import ColumnTransformer
 from sklearn.metrics import mean_absolute_error
 from sklearn.pipeline import Pipeline
 
-from src.utils.load_configs import load_configs_file
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# pylint: disable=too-many-locals
 
 
 @dataclass
