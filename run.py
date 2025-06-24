@@ -186,7 +186,7 @@ def run_all(poi_type_list):
             output_path=OUTPUT_PATHS[f"{feature_set}_results"],
         )
 
-    feature_ablation_results.append(feature_ablation_result)
+        feature_ablation_results.append(feature_ablation_result)
 
     # Additive ablation analysis
     perform_ablation_analysis(
