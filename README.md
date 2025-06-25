@@ -1,6 +1,8 @@
 # Background
 This study aims to understand and predict private condominium prices in Singapore using five years of transactional data (2020 to 2025). This will assist potential buyers in identifying key factors influencing property prices and support them in their decision-making process. The motivation for this study arises from the relative lack of studies focused specifically on private condominiums in Singapore. To establish a clearer understanding of the data, we first performed outlier detection and clustering. Outlier detection uncovered anomalous bulk sales, which were excluded from subsequent supervised learning, while clustering revealed natural groupings of transactions based on location. Supervised learning results showed that unit area had a substantially greater influence on prices compared to other features.
 
+Please refer to the Project Report for details and links to the data sources.
+
 # Run the Pipeline
 Execute `python run.py` to perform to perform the following steps:
 1. Data cleaning and preprocessing
@@ -20,6 +22,4 @@ To run src\fetch_ura_data.py, first create an URA account at https://eservice.ur
 
 ## Google Places API
 To run src\fetch_google_data.py, first create a Google Cloud account and enable the Places API at https://console.cloud.google.com/apis/library/places-backend.googleapis.com. Then, generate an API key and save it in a .env file as GOOGLE_API_KEY="your_google_places_api_key"
-
-Please refer to the Project Report for more details.
 
