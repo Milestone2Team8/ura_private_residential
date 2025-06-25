@@ -1,5 +1,6 @@
 """
-Module to perform fuzzy matching between Points of Interest (POI) data and ACRA business registry data.
+Module to perform fuzzy matching between Points of Interest (POI) data and ACRA 
+business registry data.
 
 - Normalizes business names using `cleanco`
 - Matches POI names to ACRA names using RapidFuzz
@@ -9,9 +10,9 @@ Module to perform fuzzy matching between Points of Interest (POI) data and ACRA 
 """
 
 import re
+from tqdm import tqdm
 import pandas as pd
 import cleanco
-from concurrent.futures import ThreadPoolExecutor
 from rapidfuzz import process, fuzz
 
 
@@ -32,7 +33,7 @@ def match_acra_poi_data(df_acra, df_poi):
     Match POI names to ACRA business names using fuzzy matching and address proximity scoring.
     Returns a filtered merged DataFrame.
     """
-    df_poi['name_clean'] = df_poi['name'].apply(lambda x: cleanco.clean.normalized(x))
+    df_poi['name_clean'] = df_poi['name'].map(cleanco.clean.normalized)
     acra_names = df_acra['name_clean'].tolist()
 
     def match_poi_name(poi_name):
@@ -46,11 +47,9 @@ def match_acra_poi_data(df_acra, df_poi):
     poi_names = df_poi['name_clean'].tolist()
 
     matches = []
-    with ThreadPoolExecutor(max_workers=8) as executor:
-        for i, result in enumerate(executor.map(match_poi_name, poi_names)):
-            if i % 100 == 0:
-                print(f"Matched {i}/{len(poi_names)} POIs...")
-            matches.append(result)
+    for poi_name in tqdm(poi_names, desc="Matching POIs"):
+        result = match_poi_name(poi_name)
+        matches.append(result)
 
     df_matches = pd.DataFrame(matches, columns=[
         "poi_name_clean", "matched_name_clean", "score", "acra_index"

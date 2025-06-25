@@ -9,7 +9,8 @@ shap==0.48.0
 umap-learn==0.5.7
 xlrd==2.0.1
 torch==2.7.1
-
+cleanco==2.3
+rapidfuzz==3.13.0
 
 # Geospatial Libraries
 shapely==2.0.6

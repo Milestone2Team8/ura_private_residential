@@ -1,11 +1,14 @@
-import time
-import requests
+"""
+Dowloand ACRA Corporate Entity Dataset from data.gov.sg
+"""
 import glob
 import os
+import time
+import requests
 import pandas as pd
 import cleanco
 
-
+# pylint: disable=redefined-outer-name
 
 DATASET_LIST = [
     "d_8575e84912df3c28995b8e6e0e05205a", "d_3a3807c023c61ddfba947dc069eb53f2",
